@@ -67,4 +67,3 @@ func (c Claims) HasRole(roles ...string) bool {
 	}
 	return false
 }
-

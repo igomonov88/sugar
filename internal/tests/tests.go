@@ -1,19 +1,14 @@
 package tests
 
 import (
-	"context"
-	"crypto/rand"
-	"crypto/rsa"
-	"github.com/google/uuid"
 	"github.com/igomonov88/sugar/internal/platform/database/databasetest"
 	"github.com/jmoiron/sqlx"
 	"log"
-	"os"
 	"testing"
 	"time"
 
-	_ "github.com/igomonov88/sugar/internal/platform/database/databasetest"
 	"github.com/igomonov88/sugar/internal/platform/database"
+	_ "github.com/igomonov88/sugar/internal/platform/database/databasetest"
 )
 
 // Success and failure markers.
@@ -91,8 +86,8 @@ func NewUnit(t *testing.T) (*sqlx.DB, func()) {
 
 // Test owns state for running and shutting down tests.
 type Test struct {
-	DB            *sqlx.DB
-	Log           *log.Logger
+	DB  *sqlx.DB
+	Log *log.Logger
 	//Authenticator *auth.Authenticator
 
 	t       *testing.T

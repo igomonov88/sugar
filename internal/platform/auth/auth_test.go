@@ -1,9 +1,9 @@
 package auth
 
 import (
-	"github.com/igomonov88/sugar/internal/platform/auth"
-	"github.com/dgrijalva/jwt-go"
 	"testing"
+
+	"github.com/dgrijalva/jwt-go"
 )
 
 func TestAuthenticator(t *testing.T) {
@@ -20,14 +20,14 @@ func TestAuthenticator(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	a, err := auth.NewAuthenticator(prvKey, privateRSAKeyID, "RS256", auth.NewSimpleKeyLookupFunc(privateRSAKeyID, pubKey))
+	a, err := NewAuthenticator(prvKey, privateRSAKeyID, "RS256", NewSimpleKeyLookupFunc(privateRSAKeyID, pubKey))
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// Generate the token.
-	signedClaims := auth.Claims{
-		Roles: []string{auth.RoleAdmin},
+	signedClaims := Claims{
+		Roles: []string{RoleAdmin},
 	}
 
 	tknStr, err := a.GenerateToken(signedClaims)
@@ -48,7 +48,6 @@ func TestAuthenticator(t *testing.T) {
 		t.Fatalf("expected roles[0] == %v, got %v", exp, got)
 	}
 }
-
 
 // The key id we would have generated for the private below key
 const privateRSAKeyID = "54bb2165-71e1-41a6-af3e-7da4a0e1e2c1"
