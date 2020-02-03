@@ -1,0 +1,1 @@
+CACHE_MANAGER with LRU CACHE provider
