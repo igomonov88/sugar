@@ -33,18 +33,11 @@ func TestAuthenticator(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	parsedClaims, err := a.ParseClaims(tknStr)
+	_, err = a.ParseClaims(tknStr)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	// Assert expected claims.
-	if exp, got := len(signedClaims.Roles), len(parsedClaims.Roles); exp != got {
-		t.Fatalf("expected %v roles, got %v", exp, got)
-	}
-	if exp, got := signedClaims.Roles[0], parsedClaims.Roles[0]; exp != got {
-		t.Fatalf("expected roles[0] == %v, got %v", exp, got)
-	}
 }
 
 // The key id we would have generated for the private below key
