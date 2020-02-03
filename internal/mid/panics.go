@@ -1,6 +1,5 @@
 package mid
 
-
 import (
 	"context"
 	"log"

@@ -26,9 +26,7 @@ func TestAuthenticator(t *testing.T) {
 	}
 
 	// Generate the token.
-	signedClaims := Claims{
-		Roles: []string{RoleAdmin},
-	}
+	signedClaims := Claims{}
 
 	tknStr, err := a.GenerateToken(signedClaims)
 	if err != nil {
