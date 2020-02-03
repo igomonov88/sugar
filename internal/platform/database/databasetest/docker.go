@@ -1,4 +1,4 @@
-package databasetests
+package databasetest
 
 import (
 	"bytes"

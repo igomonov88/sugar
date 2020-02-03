@@ -4,13 +4,15 @@ import (
 	"context"
 	"crypto/rand"
 	"crypto/rsa"
+	"github.com/google/uuid"
+	"github.com/igomonov88/sugar/internal/platform/database/databasetest"
 	"github.com/jmoiron/sqlx"
 	"log"
 	"os"
 	"testing"
 	"time"
 
-	"github.com/igomonov88/sugar/internal/platform/database/databasetests"
+	_ "github.com/igomonov88/sugar/internal/platform/database/databasetest"
 	"github.com/igomonov88/sugar/internal/platform/database"
 )
 
@@ -71,10 +73,10 @@ func NewUnit(t *testing.T) (*sqlx.DB, func()) {
 		t.Fatalf("waiting for database to be ready: %v", pingError)
 	}
 
-	if err := schema.Migrate(db); err != nil {
-		databasetest.StopContainer(t, c)
-		t.Fatalf("migrating: %s", err)
-	}
+	//if err := schema.Migrate(db); err != nil {
+	//	databasetest.StopContainer(t, c)
+	//	t.Fatalf("migrating: %s", err)
+	//}
 
 	// teardown is the function that should be invoked when the caller is done
 	// with the database.
@@ -159,7 +161,7 @@ func (test *Test) Teardown() {
 //	return tkn
 //}
 
-// Context returns an app level context for testing.
+//Context returns an app level context for testing.
 //func Context() context.Context {
 //	values := web.Values{
 //		TraceID: uuid.New().String(),
