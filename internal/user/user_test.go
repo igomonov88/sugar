@@ -25,7 +25,8 @@ func TestUser(t *testing.T) {
 		claims := auth.NewClaims(uuid.New().String(), now, time.Hour)
 
 		nu := user.NewUser{
-			Name:            "Igor Gomonov",
+			FirstName:       "Igor",
+			LastName:        "Gomonov",
 			Email:           "gomonov.igor@gmail.com",
 			Roles:           []string{auth.RoleAdmin},
 			Password:        "qwerty",
@@ -50,7 +51,7 @@ func TestUser(t *testing.T) {
 		t.Logf("\t%s\tShould get back the same user.", tests.Success)
 
 		upd := user.UpdateUser{
-			Name:  tests.StringPointer("Maris Gomonov"),
+			FirstName:  tests.StringPointer("Maris"),
 			Email: tests.StringPointer("maris@gmail.com"),
 		}
 
@@ -65,10 +66,10 @@ func TestUser(t *testing.T) {
 		}
 		t.Logf("\t%s\tShould be able to retrieve user.", tests.Success)
 
-		if savedU.Name != *upd.Name {
+		if savedU.FirstName != *upd.FirstName {
 			t.Errorf("\t%s\tShould be able to see updates to Name.", tests.Failed)
-			t.Log("\t\tGot:", savedU.Name)
-			t.Log("\t\tExp:", *upd.Name)
+			t.Log("\t\tGot:", savedU.FirstName)
+			t.Log("\t\tExp:", *upd.FirstName)
 		} else {
 			t.Logf("\t%s\tShould be able to see updates to Name.", tests.Success)
 		}
@@ -106,7 +107,8 @@ func TestAuthenticate(t *testing.T) {
 		now := time.Date(2020, time.February, 3, 0, 0, 0, 0, time.UTC)
 
 		nu := user.NewUser{
-			Name:            "Tanya Gomonova",
+			FirstName:       "Tanya",
+			LastName:        "Gomonova",
 			Email:           "tanya@gmail.com",
 			Roles:           []string{auth.RoleAdmin},
 			Password:        "qwerty",
