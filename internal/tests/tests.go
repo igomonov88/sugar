@@ -13,7 +13,7 @@ import (
 	"github.com/igomonov88/sugar/internal/platform/auth"
 	"github.com/igomonov88/sugar/internal/platform/database/databasetest"
 	"github.com/igomonov88/sugar/internal/platform/web"
-	schema2 "github.com/igomonov88/sugar/internal/schema"
+	"github.com/igomonov88/sugar/internal/schema"
 	"github.com/igomonov88/sugar/internal/user"
 	"github.com/jmoiron/sqlx"
 
@@ -78,7 +78,7 @@ func NewUnit(t *testing.T) (*sqlx.DB, func()) {
 		t.Fatalf("waiting for database to be ready: %v", pingError)
 	}
 
-	if err := schema2.Migrate(db); err != nil {
+	if err := schema.Migrate(db); err != nil {
 		databasetest.StopContainer(t, c)
 		t.Fatalf("migrating: %s", err)
 	}
@@ -111,7 +111,7 @@ func NewIntegration(t *testing.T) *Test {
 	// Initialize and seed database. Store the cleanup function call later.
 	db, cleanup := NewUnit(t)
 
-	if err := schema2.Seed(db); err != nil {
+	if err := schema.Seed(db); err != nil {
 		t.Fatal(err)
 	}
 

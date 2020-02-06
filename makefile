@@ -1,26 +1,29 @@
 SHELL := /bin/bash
 
-export PROJECT = sugar
+export PROJECT = ardan-starter-kit
 
-all: sugar-api metrics
+all: sales-api metrics
 
 keys:
-    go run ./cmd/sugar-admin/main.go keygen private.pem
+	go run ./cmd/sugar-admin/main.go keygen private.pem
+
+admin:
+	go run ./cmd/sugar-admin/main.go --db-disable-tls=1 useradd admin@example.com gophers
 
 migrate:
-    go run ./cmd/sugar-admin/main.go --db-disable-tls=1 migrate
+	go run ./cmd/sugar-admin/main.go --db-disable-tls=1 migrate
 
 seed: migrate
-    go run ./cmd/sales-admin/main.go --disable-tls=1 seed
+	go run ./cmd/sugar-admin/main.go --db-disable-tls=1 seed
 
-sugar-api:
-    docker build \
-        -f dockerfile/sugar-api \
-        -t gcr.io/$(PROJECT)/sugar-api-amd64:1.0 \
-        -build-arg PACKAGE_NAME=sugar-api \
-        --build-arg VCS_REF=`git rev-parse HEAD` \
-        --build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
-        .
+sales-api:
+	docker build \
+		-f dockerfile.sugar-api \
+		-t gcr.io/$(PROJECT)/sugar-api-amd64:1.0 \
+		--build-arg PACKAGE_NAME=sugar-api \
+		--build-arg VCS_REF=`git rev-parse HEAD` \
+		--build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
+		.
 
 metrics:
 	docker build \

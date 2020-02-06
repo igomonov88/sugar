@@ -1,4 +1,5 @@
-package sugar_admin
+// This program performs administrative tasks for the garage sale service.
+package main
 
 import (
 	"context"
@@ -12,11 +13,12 @@ import (
 	"time"
 
 	"github.com/ardanlabs/conf"
+	"github.com/pkg/errors"
+
 	"github.com/igomonov88/sugar/internal/platform/auth"
 	"github.com/igomonov88/sugar/internal/platform/database"
 	schema2 "github.com/igomonov88/sugar/internal/schema"
 	"github.com/igomonov88/sugar/internal/user"
-	"github.com/pkg/errors"
 )
 
 func main() {

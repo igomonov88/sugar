@@ -6,10 +6,11 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/uuid"
+	"github.com/pkg/errors"
+
 	"github.com/igomonov88/sugar/internal/platform/auth"
 	"github.com/igomonov88/sugar/internal/tests"
 	"github.com/igomonov88/sugar/internal/user"
-	"github.com/pkg/errors"
 )
 
 // TestUser validates the full set of CRUD operations on User values.
