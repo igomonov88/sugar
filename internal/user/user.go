@@ -5,12 +5,12 @@ import (
 	"database/sql"
 	"time"
 
-	"golang.org/x/crypto/bcrypt"
-	"github.com/pkg/errors"
-	"github.com/igomonov88/sugar/internal/platform/auth"
 	"github.com/google/uuid"
+	"github.com/igomonov88/sugar/internal/platform/auth"
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
 	"go.opencensus.io/trace"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var (
@@ -37,14 +37,14 @@ func List(ctx context.Context, db *sqlx.DB) ([]User, error) {
 
 	const q = `SELECT * FROM users;`
 
-	if err := db.SelectContext(ctx, &users,q); err != nil {
+	if err := db.SelectContext(ctx, &users, q); err != nil {
 		return nil, errors.Wrap(err, "selecting users")
 	}
 	return users, nil
 }
 
 // Retrieve gets the specified user from the database.
-func Retrieve(ctx context.Context, claims auth.Claims, db *sqlx.DB,id string) (*User, error) {
+func Retrieve(ctx context.Context, claims auth.Claims, db *sqlx.DB, id string) (*User, error) {
 	ctx, span := trace.StartSpan(ctx, "internal.user.Retrieve")
 	defer span.End()
 
@@ -54,7 +54,7 @@ func Retrieve(ctx context.Context, claims auth.Claims, db *sqlx.DB,id string) (*
 
 	var u User
 	const q = `SELECT * FROM users WHERE user_id = $1;`
-	if err := db.GetContext(ctx, &u,q,id); err != nil {
+	if err := db.GetContext(ctx, &u, q, id); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, ErrNotFound
 		}
@@ -67,7 +67,7 @@ func Create(ctx context.Context, db *sqlx.DB, nu NewUser, now time.Time) (*User,
 	ctx, span := trace.StartSpan(ctx, "internal.user.Create")
 	defer span.End()
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(nu.Password),bcrypt.DefaultCost)
+	hash, err := bcrypt.GenerateFromPassword([]byte(nu.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, errors.Wrap(err, "generating password hash")
 	}
@@ -164,7 +164,7 @@ func Authenticate(ctx context.Context, db *sqlx.DB, now time.Time, email, passwo
 
 	// Compare the provided password with the saved hash. Use the bcrypt
 	// comparison function so it is cryptographically secure.
-	if err := bcrypt.CompareHashAndPassword(u.PasswordHash,[]byte(password)); err != nil {
+	if err := bcrypt.CompareHashAndPassword(u.PasswordHash, []byte(password)); err != nil {
 		return auth.Claims{}, ErrAuthenticationFailure
 	}
 
@@ -173,4 +173,3 @@ func Authenticate(ctx context.Context, db *sqlx.DB, now time.Time, email, passwo
 	claims := auth.NewClaims(u.ID, now, time.Hour)
 	return claims, nil
 }
-

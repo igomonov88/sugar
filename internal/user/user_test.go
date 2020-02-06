@@ -1,14 +1,15 @@
 package user_test
 
 import (
+	"testing"
+	"time"
+
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/uuid"
 	"github.com/igomonov88/sugar/internal/platform/auth"
 	"github.com/igomonov88/sugar/internal/tests"
 	"github.com/igomonov88/sugar/internal/user"
 	"github.com/pkg/errors"
-	"testing"
-	"time"
 )
 
 // TestUser validates the full set of CRUD operations on User values.
@@ -19,13 +20,14 @@ func TestUser(t *testing.T) {
 	t.Log("Given the need to work with User records.")
 	{
 		ctx := tests.Context()
-		now := time.Date(2020, time.February, 3, 0,0,0,0, time.UTC)
+		now := time.Date(2020, time.February, 3, 0, 0, 0, 0, time.UTC)
 
 		claims := auth.NewClaims(uuid.New().String(), now, time.Hour)
 
 		nu := user.NewUser{
 			Name:            "Igor Gomonov",
 			Email:           "gomonov.igor@gmail.com",
+			Roles:           []string{auth.RoleAdmin},
 			Password:        "qwerty",
 			PasswordConfirm: "qwerty",
 		}
@@ -48,8 +50,8 @@ func TestUser(t *testing.T) {
 		t.Logf("\t%s\tShould get back the same user.", tests.Success)
 
 		upd := user.UpdateUser{
-			Name:            tests.StringPointer("Maris Gomonov"),
-			Email:           tests.StringPointer("maris@gmail.com"),
+			Name:  tests.StringPointer("Maris Gomonov"),
+			Email: tests.StringPointer("maris@gmail.com"),
 		}
 
 		if err := user.Update(ctx, db, claims, u.ID, upd, now); err != nil {
@@ -93,7 +95,7 @@ func TestUser(t *testing.T) {
 }
 
 // TestAuthenticate validates the behavior around authenticating users.
-func TestAuthenticate (t *testing.T) {
+func TestAuthenticate(t *testing.T) {
 	db, teardown := tests.NewUnit(t)
 	defer teardown()
 
@@ -106,6 +108,7 @@ func TestAuthenticate (t *testing.T) {
 		nu := user.NewUser{
 			Name:            "Tanya Gomonova",
 			Email:           "tanya@gmail.com",
+			Roles:           []string{auth.RoleAdmin},
 			Password:        "qwerty",
 			PasswordConfirm: "qwerty",
 		}
@@ -124,6 +127,7 @@ func TestAuthenticate (t *testing.T) {
 
 		want := auth.Claims{}
 		want.Subject = u.ID
+		want.Roles = u.Roles
 		want.ExpiresAt = now.Add(time.Hour).Unix()
 		want.IssuedAt = now.Unix()
 

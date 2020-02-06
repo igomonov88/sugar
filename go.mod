@@ -3,6 +3,7 @@ module github.com/igomonov88/sugar
 go 1.12
 
 require (
+	github.com/ardanlabs/conf v1.2.0
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/dimfeld/httptreemux/v5 v5.0.2

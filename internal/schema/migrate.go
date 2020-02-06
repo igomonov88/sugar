@@ -39,4 +39,19 @@ CREATE TABLE users (
 	PRIMARY KEY (user_id)
 );`,
 	},
+	{
+		Version:     2,
+		Description: "Rename column name to first_name",
+		Script:      `ALTER TABLE users RENAME COLUMN name TO first_name;`,
+	},
+	{
+		Version:     3,
+		Description: "add column last_name to users table",
+		Script:      `ALTER TABLE users ADD COLUMN last_name TEXT;`,
+	},
+	{
+		Version:     4,
+		Description: "add roles field to users table",
+		Script:      `ALTER TABLE users ADD COLUMN roles TEXT[]`,
+	},
 }
