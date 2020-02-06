@@ -20,7 +20,8 @@ type User struct {
 
 // NewUser contains information needed to create a new User.
 type NewUser struct {
-	Name            string   `json:"name" validate:"required"`
+	FirstName       string   `json:"first_name" validate:"required"`
+	LastName        string   `json:"last_name" validate:"required"`
 	Email           string   `json:"email" validate:"required"`
 	Roles           []string `json:"roles" validate:"required"`
 	Password        string   `json:"password" validate:"required"`
@@ -34,7 +35,8 @@ type NewUser struct {
 // we do not want to use pointers to basic types but we make exceptions around
 // marshalling/unmarshalling.
 type UpdateUser struct {
-	Name            *string  `json:"name"`
+	FirstName       *string  `json:"first_name"`
+	LastName        *string  `json:"last_name"`
 	Email           *string  `json:"email"`
 	Roles           []string `json:"roles" validate:"required"`
 	Password        *string  `json:"password"`

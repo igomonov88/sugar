@@ -11,12 +11,12 @@ import (
 	"os"
 	"time"
 
+	"github.com/ardanlabs/conf"
 	"github.com/igomonov88/sugar/internal/platform/auth"
 	"github.com/igomonov88/sugar/internal/platform/database"
 	schema2 "github.com/igomonov88/sugar/internal/schema"
 	"github.com/igomonov88/sugar/internal/user"
 	"github.com/pkg/errors"
-	"github.com/ardanlabs/conf"
 )
 
 func main() {

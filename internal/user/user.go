@@ -74,16 +74,17 @@ func Create(ctx context.Context, db *sqlx.DB, nu NewUser, now time.Time) (*User,
 
 	u := User{
 		ID:           uuid.New().String(),
-		Name:         nu.Name,
+		FirstName:    nu.FirstName,
+		LastName:     nu.LastName,
 		Email:        nu.Email,
 		PasswordHash: hash,
 		DateCreated:  now.UTC(),
 		DateUpdated:  now.UTC(),
 	}
-	const q = `INSERT INTO users (user_id, name, email, password_hash, date_created, date_updated) 
+	const q = `INSERT INTO users (user_id, first_name, last_name, email, password_hash, date_created, date_updated) 
 				VALUES ($1, $2, $3, $4, $5, $6);`
 
-	_, err = db.ExecContext(ctx, q, u.ID, u.Name, u.Email, u.PasswordHash, u.DateCreated, u.DateUpdated)
+	_, err = db.ExecContext(ctx, q, u.ID, u.FirstName, u.FirstName, u.Email, u.PasswordHash, u.DateCreated, u.DateUpdated)
 	if err != nil {
 		return nil, errors.Wrap(err, "inserting user")
 	}
@@ -100,8 +101,12 @@ func Update(ctx context.Context, db *sqlx.DB, claims auth.Claims, id string, upd
 		return err
 	}
 
-	if upd.Name != nil {
-		u.Name = *upd.Name
+	if upd.FirstName != nil {
+		u.FirstName = *upd.FirstName
+	}
+
+	if upd.LastName != nil {
+		u.LastName = *upd.LastName
 	}
 
 	if upd.Email != nil {
@@ -118,9 +123,9 @@ func Update(ctx context.Context, db *sqlx.DB, claims auth.Claims, id string, upd
 
 	u.DateUpdated = now
 
-	const q = `UPDATE users SET "name"=$2, "email"=$3, "password_hash"=$4, "date_updated"=$5 WHERE user_id=$1`
+	const q = `UPDATE users SET "first_name"=$2, "last_name"= $3, "email"=$4, "password_hash"=$5, "date_updated"=$6 WHERE user_id=$1`
 
-	_, err = db.ExecContext(ctx, q, id, u.Name, u.Email, u.PasswordHash, u.DateUpdated)
+	_, err = db.ExecContext(ctx, q, id, u.FirstName, u.LastName, u.Email, u.PasswordHash, u.DateUpdated)
 	if err != nil {
 		return errors.Wrap(err, "updating user")
 	}
