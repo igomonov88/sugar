@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-export PROJECT = ardan-starter-kit
+export PROJECT = sugar
 
 all: sales-api metrics
 
