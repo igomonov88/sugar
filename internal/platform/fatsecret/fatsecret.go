@@ -29,15 +29,15 @@ var (
 
 // Client makes all operations with fatsecret external api
 type Client struct {
-	config Config
+	Config
 }
 
 // Connect knows how to connect to fatsecret client with provided config
 func Connect(cfg Config) (*Client, error) {
-	if cfg.apiURL == "" || cfg.consumerKey == "" || cfg.consumerSecret == "" {
+	if cfg.APIURL == "" || cfg.ConsumerKey == "" || cfg.ConsumerSecret == "" {
 		return nil, ErrInvalidConfig
 	}
-	return &Client{config: cfg}, nil
+	return &Client{cfg}, nil
 }
 
 // Search making call to external api for the specified query and method, and marshall response to dest value, or returns error
@@ -52,7 +52,7 @@ func (c *Client) Search(query, method string, dest interface{}) error {
 
 // FoodsSearch is checking for the method we trying to call from the external api and call appropriate search function
 func FoodsSearch(client *Client, query string, dest interface{}) error {
-	_, err := fSearch(client.config.consumerKey, client.config.apiURL, query)
+	_, err := fSearch(client.ConsumerKey, client.APIURL, query)
 	if err != nil {
 		switch err {
 		// TODO: think about handling an error from http.Get call for external api call

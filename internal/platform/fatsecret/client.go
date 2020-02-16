@@ -9,9 +9,9 @@ import (
 
 // Config is the required properties to use fatsecret search api
 type Config struct {
-	consumerKey    string
-	consumerSecret string
-	apiURL         string
+	ConsumerKey    string
+	ConsumerSecret string
+	APIURL         string
 }
 
 // StatusCheck returns nil if it can successfully talk to the database. It
@@ -22,7 +22,7 @@ func StatusCheck(ctx context.Context, cl Client) error {
 
 	requestParams := make(map[string]interface{})
 	requestParams["brand_type"] = "mars"
-	requestURL := buildRequestURL(cl.config.consumerKey, cl.config.apiURL, "food_brands.get", requestParams)
+	requestURL := buildRequestURL(cl.ConsumerKey, cl.APIURL, FoodsSearchMethod, requestParams)
 	_, err := http.Get(requestURL)
 	return err
 }
