@@ -7,10 +7,6 @@ import (
 	"go.opencensus.io/trace"
 )
 
-const (
-	foodsSearch = "foods.search"
-)
-
 // Config is the required properties to use fatsecret search api
 type Config struct {
 	consumerKey    string
@@ -24,7 +20,7 @@ func StatusCheck(ctx context.Context, cl Client) error {
 	ctx, span := trace.StartSpan(ctx, "platform.Search.StatusCheck")
 	defer span.End()
 
-	requestParams := make(map[string]string)
+	requestParams := make(map[string]interface{})
 	requestParams["brand_type"] = "mars"
 	requestURL := buildRequestURL(cl.config.consumerKey, cl.config.apiURL, "food_brands.get", requestParams)
 	_, err := http.Get(requestURL)
