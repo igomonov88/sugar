@@ -4,11 +4,13 @@ import (
 	"crypto/hmac"
 	"crypto/sha1"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math/rand"
 	"net/http"
 	"net/url"
+	"reflect"
 	"sort"
 	"strings"
 	"time"
@@ -25,6 +27,9 @@ var (
 
 	// ErrMethodNotSupported is used then we try to call search with api method which is not supported
 	ErrMethodNotSupported = errors.New("api mathod not supported")
+
+	// ErrCallExternalAPI is used then we got an http error while making external api call
+	ErrCallExternalAPI = errors.New("got an http error on calling external api")
 )
 
 // Client makes all operations with fatsecret external api
@@ -44,28 +49,40 @@ func Connect(cfg Config) (*Client, error) {
 func (c *Client) Search(query, method string, dest interface{}) error {
 	switch method {
 	case FoodsSearchMethod:
-		return FoodsSearch(c, query, dest)
+		return foodsSearch(c, query, dest)
 	default:
 		return ErrMethodNotSupported
 	}
 }
 
-// FoodsSearch is checking for the method we trying to call from the external api and call appropriate search function
-func FoodsSearch(client *Client, query string, dest interface{}) error {
-	_, err := fSearch(client.ConsumerKey, client.APIURL, query)
+// foodsSearch is checking for the method we trying to call from the external api and call appropriate search function
+func foodsSearch(client *Client, query string, dest interface{}) error {
+	resp, err := foodsSearchExternalCall(client.ConsumerKey, client.APIURL, query)
 	if err != nil {
-		switch err {
-		// TODO: think about handling an error from http.Get call for external api call
-		// also we should check here status code from external API response
+		switch e := err.(type) {
+		case *url.Error:
+			if !e.Temporary() {
+				return ErrCallExternalAPI
+			}
 		}
 	}
+	defer resp.Body.Close()
 
-	// TODO here we should check the type of dest value and does check it for nil
-	// if all checks pass, we should try to decode the response value from the api call to dest value
-	return err
+	value := reflect.ValueOf(dest)
+	// json.Unmarshal returns errors for these
+	if value.Kind() != reflect.Ptr {
+		return errors.New("must pass a pointer, not a value, to StructScan destination")
+	}
+	if value.IsNil() {
+		return errors.New("nil pointer passed to StructScan destination")
+	}
+	decoder := json.NewDecoder(resp.Body)
+	return decoder.Decode(dest)
 }
 
-func fSearch(consumerKey, apiURL, query string) (resp *http.Response, err error) {
+// foodsSearchExternalCall only knows compose a request query to external api, call it with http.Get method
+// and return reposne as it is
+func foodsSearchExternalCall(consumerKey, apiURL, query string) (resp *http.Response, err error) {
 	requestParams := make(map[string]interface{})
 	requestParams["search_expression"] = query
 	requestParams["max_results"] = 20
@@ -90,7 +107,7 @@ func buildRequestURL(consumerKey, apiURL, apiMethod string, requestParams map[st
 		"oauth_nonce":            nonce,
 		"oauth_signature_method": "HMAC-SHA1",
 		"oauth_timestamp":        ts,
-		"oauth_version":          "1.0",
+		"oauth_version":          "2.0",
 		"format":                 "json",
 	}
 
@@ -130,7 +147,7 @@ func buildRequestURL(consumerKey, apiURL, apiMethod string, requestParams map[st
 	requestQuery = requestQuery[1:]
 
 	requestURL += requestQuery
-
+	fmt.Printf("REQUEST URL: %v", requestQuery)
 	return requestURL
 }
 
