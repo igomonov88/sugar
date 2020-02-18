@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"reflect"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -26,18 +27,18 @@ var (
 	ErrInvalidConfig = errors.New("config values does not specified properly")
 
 	// ErrMethodNotSupported is used then we try to call search with api method which is not supported
-	ErrMethodNotSupported = errors.New("api mathod not supported")
+	ErrMethodNotSupported = errors.New("api method not supported")
 
 	// ErrCallExternalAPI is used then we got an http error while making external api call
 	ErrCallExternalAPI = errors.New("got an http error on calling external api")
 )
 
-// Client makes all operations with fatsecret external api
+// Client makes all operations with fatSecret external api
 type Client struct {
-	Config
+	cfg Config
 }
 
-// Connect knows how to connect to fatsecret client with provided config
+// Connect knows how to connect to fatSecret client with provided config
 func Connect(cfg Config) (*Client, error) {
 	if cfg.APIURL == "" || cfg.ConsumerKey == "" || cfg.ConsumerSecret == "" {
 		return nil, ErrInvalidConfig
@@ -57,7 +58,7 @@ func (c *Client) Search(query, method string, dest interface{}) error {
 
 // foodsSearch is checking for the method we trying to call from the external api and call appropriate search function
 func foodsSearch(client *Client, query string, dest interface{}) error {
-	resp, err := foodsSearchExternalCall(client.ConsumerKey, client.APIURL, query)
+	resp, err := foodsSearchExternalCall(client.cfg.ConsumerKey, client.cfg.ConsumerSecret, client.cfg.APIURL, query)
 	if err != nil {
 		switch e := err.(type) {
 		case *url.Error:
@@ -81,74 +82,67 @@ func foodsSearch(client *Client, query string, dest interface{}) error {
 }
 
 // foodsSearchExternalCall only knows compose a request query to external api, call it with http.Get method
-// and return reposne as it is
-func foodsSearchExternalCall(consumerKey, apiURL, query string) (resp *http.Response, err error) {
-	requestParams := make(map[string]interface{})
+// and return response as it is
+func foodsSearchExternalCall(consumerKey, consumerSecret, apiURL, query string) (resp *http.Response, err error) {
+	requestParams := make(map[string]string)
 	requestParams["search_expression"] = query
-	requestParams["max_results"] = 20
-	return http.Get(buildRequestURL(consumerKey, apiURL, FoodsSearchMethod, requestParams))
+	requestParams["max_results"] = strconv.Itoa(20)
+	return http.Get(buildRequestURL(consumerKey, consumerSecret, apiURL, FoodsSearchMethod, requestParams))
 }
 
-func buildRequestURL(consumerKey, apiURL, apiMethod string, requestParams map[string]interface{}) string {
+// buildRequestURL method that compose valid url with provided parameters to use that url in Get call to fatSecret api
+func buildRequestURL(consumerKey, consumerSecret, apiURL, apiMethod string, requestParams map[string]string) string {
 	var (
-		signatureQuery string
-		signatureBase  string
-		requestURL     string
-		requestQuery   string
-	)
-	// get the oauth time parameters
-	ts := fmt.Sprintf("%d", time.Now().Unix())
-	nonce := fmt.Sprintf("%d", rand.New(rand.NewSource(time.Now().UnixNano())).Int63())
-
-	// build the base message
-	message := map[string]interface{}{
+		sigQueryStr string
+		requestQuery string
+		)
+	requestTime := fmt.Sprintf("%d", time.Now().Unix())
+	requestURL := fmt.Sprintf("%s?", apiURL)
+	message := map[string]string{
 		"method":                 apiMethod,
 		"oauth_consumer_key":     consumerKey,
-		"oauth_nonce":            nonce,
+		"oauth_nonce":            fmt.Sprintf("%d", rand.NewSource(time.Now().UnixNano()).Int63()),
 		"oauth_signature_method": "HMAC-SHA1",
-		"oauth_timestamp":        ts,
-		"oauth_version":          "2.0",
+		"oauth_timestamp":        requestTime,
+		"oauth_version":          "1.0",
 		"format":                 "json",
 	}
-
-	for parameterName, parameterValue := range requestParams {
-		message[parameterName] = parameterValue
+	for requestKey, requestValue := range requestParams {
+		message[requestKey] = requestValue
 	}
 
 	messageKeys := make([]string, 0, len(message))
 
-	for messageKey := range message {
+	for messageKey, _ := range message {
 		messageKeys = append(messageKeys, messageKey)
 	}
-
+	// sort keys
 	sort.Strings(messageKeys)
 
+	// build sorted k/v string for sig
 	for i := range messageKeys {
-		signatureQuery = fmt.Sprintf("&%s=%s", messageKeys[i], escape(messageKeys[i]))
+		sigQueryStr = fmt.Sprintf("%s&%s=%s",sigQueryStr,  messageKeys[i], escape(message[messageKeys[i]]))
 	}
+	// drop initial &
+	sigQueryStr = sigQueryStr[1:]
 
-	signatureQuery = signatureQuery[1:]
-	signatureBase = fmt.Sprintf("GET&%s&%s", url.QueryEscape(apiURL), escape(signatureQuery))
+	mac := hmac.New(sha1.New, []byte(consumerSecret+"&"))
+	mac.Write([]byte(fmt.Sprintf("GET&%s&%s", url.QueryEscape(apiURL), escape(sigQueryStr))))
+	sig := base64.StdEncoding.EncodeToString(mac.Sum(nil))
 
-	mac := hmac.New(sha1.New, []byte(consumerKey+"&"))
-	mac.Write([]byte(signatureBase))
-	signature := base64.StdEncoding.EncodeToString(mac.Sum(nil))
-
-	message["oauth_signature"] = signature
+	// add sig to map
+	message["oauth_signature"] = sig
 	messageKeys = append(messageKeys, "oauth_signature")
 
+	// re-sort keys after adding sig
 	sort.Strings(messageKeys)
-	requestURL = fmt.Sprintf("%s?", apiURL)
-
 	for i := range messageKeys {
-		requestQuery = fmt.Sprintf("&%s=%s", messageKeys[i], escape(messageKeys[i]))
+		requestQuery += fmt.Sprintf("&%s=%s", messageKeys[i], escape(message[messageKeys[i]]))
 	}
-
+	// drop initial &
 	requestQuery = requestQuery[1:]
 
-	requestURL += requestQuery
-	fmt.Printf("REQUEST URL: %v", requestQuery)
-	return requestURL
+	return fmt.Sprintf("%s%s", requestURL, requestQuery)
 }
 
 // escape the given string using url-escape plus some extras

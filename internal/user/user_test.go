@@ -52,8 +52,8 @@ func TestUser(t *testing.T) {
 		t.Logf("\t%s\tShould get back the same user.", tests.Success)
 
 		upd := user.UpdateUser{
-			FirstName:  tests.StringPointer("Maris"),
-			Email: tests.StringPointer("maris@gmail.com"),
+			FirstName: tests.StringPointer("Maris"),
+			Email:     tests.StringPointer("maris@gmail.com"),
 		}
 
 		if err := user.Update(ctx, db, claims, u.ID, upd, now); err != nil {

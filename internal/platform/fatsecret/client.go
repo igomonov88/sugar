@@ -16,13 +16,13 @@ type Config struct {
 
 // StatusCheck returns nil if it can successfully talk to the database. It
 // returns a non-nil error otherwise.
-func StatusCheck(ctx context.Context, cl Client) error {
+func StatusCheck(ctx context.Context, c *Client) error {
 	ctx, span := trace.StartSpan(ctx, "platform.Search.StatusCheck")
 	defer span.End()
 
-	requestParams := make(map[string]interface{})
+	requestParams := make(map[string]string)
 	requestParams["brand_type"] = "mars"
-	requestURL := buildRequestURL(cl.ConsumerKey, cl.APIURL, FoodsSearchMethod, requestParams)
-	_, err := http.Get(requestURL)
+	reqURL := buildRequestURL(c.cfg.ConsumerKey, c.cfg.ConsumerSecret, c.cfg.APIURL, FoodsSearchMethod, requestParams)
+	_, err := http.Get(reqURL)
 	return err
 }
