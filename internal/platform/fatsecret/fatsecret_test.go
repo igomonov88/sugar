@@ -43,9 +43,15 @@ func TestFatSecretClient(t *testing.T) {
 		{
 			err := client.Search("qwerty", "qwerty", &fs)
 			if err != ErrMethodNotSupported {
-				t.Logf("\t%s\tUsage of unspecified search method should return %s error but got: %s", Failed, ErrMethodNotSupported, err)
+				t.Logf("\t%s\tUsage of unspecified search method should return: %s error but got: %s", Failed, ErrMethodNotSupported, err)
 			}
-			t.Logf("\t%s\tUsage of unspecified search method should return %s error", Success, ErrMethodNotSupported)
+			t.Logf("\t%s\tUsage of unspecified search method should return %s error.", Success, ErrMethodNotSupported)
+
+			cfg.ConsumerSecret = ""
+			if _, err := Connect(cfg); err != ErrInvalidConfig {
+				t.Fatalf("\t%s\tUsage of inaproppriate configuration should return: %s error but got: %s.", Failed, ErrInvalidConfig, err)
+			}
+			t.Logf("\t%s\tUsage of inaproppriate configuration should return: %s error.", Success, ErrInvalidConfig)
 		}
 	}
 }
