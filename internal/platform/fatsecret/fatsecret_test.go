@@ -1,35 +1,51 @@
 package fatsecret
 
 import (
-	"fmt"
-	"io/ioutil"
-	"log"
-	"net/http"
 	"testing"
 )
 
-type FoodSearchResponseFoods struct {
-	Foods map[string]interface{}
-}
+const (
+	Success = "\u2713"
+	Failed  = "\u2717"
+)
 
 func TestFatSecretClient(t *testing.T) {
-	 cfg := Config{
-		ConsumerKey:    "883aa16d49bf49f8b53bb47f26a4a982",
-		ConsumerSecret: "4b1be7f07d974ecab518dde15206641d",
-		APIURL:         "https://platform.fatsecret.com/rest/server.api",
-	}
 
+	t.Log("Given we starting to test fatSecret api.")
+	{
+		cfg := Config{
+			ConsumerKey:    "883aa16d49bf49f8b53bb47f26a4a982",
+			ConsumerSecret: "4b1be7f07d974ecab518dde15206641d",
+			APIURL:         "https://platform.fatsecret.com/rest/server.api",
+		}
+		client, err := Connect(cfg)
+		if err != nil {
+			t.Fatalf("\t%s\tShould be able to connect to fatSecret client : %s.", Failed, err)
+		}
+		t.Logf("\t%s\tShould be able to connect to fatSecret client.", Success)
 
-	requestParams := make(map[string]string)
-	requestParams["search_expression"] = "mars"
-	reqURL := buildRequestURL(cfg.ConsumerKey, cfg.ConsumerSecret, cfg.APIURL, FoodsSearchMethod, requestParams)
-	response, err := http.Get(reqURL)
-	if err != nil {
-		t.Log(err)
+		type FoodsSearchResponse struct {
+			Foods struct {
+				Food []struct {
+					BrandName       string `json:"brand_name"`
+					FoodDescription string `json:"food_description"`
+					FoodName        string `json:"food_name"`
+				} `json:"food"`
+			} `json:"foods"`
+		}
+		fs := FoodsSearchResponse{}
+		if err := client.Search("mars", FoodsSearchMethod, &fs); err != nil {
+			t.Fatalf("\t%s\tShould be able to search for given query : %s.", Failed, err)
+		}
+		t.Logf("\t%s\tShould be able to search for given query.", Success)
+
+		t.Logf("Given we start testing negative flow.")
+		{
+			err := client.Search("qwerty", "qwerty", &fs)
+			if err != ErrMethodNotSupported {
+				t.Logf("\t%s\tUsage of unspecified search method should return %s error but got: %s", Failed, ErrMethodNotSupported, err)
+			}
+			t.Logf("\t%s\tUsage of unspecified search method should return %s error", Success, ErrMethodNotSupported)
+		}
 	}
-	body, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println(string(body))
 }

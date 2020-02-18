@@ -93,9 +93,9 @@ func foodsSearchExternalCall(consumerKey, consumerSecret, apiURL, query string) 
 // buildRequestURL method that compose valid url with provided parameters to use that url in Get call to fatSecret api
 func buildRequestURL(consumerKey, consumerSecret, apiURL, apiMethod string, requestParams map[string]string) string {
 	var (
-		sigQueryStr string
+		sigQueryStr  string
 		requestQuery string
-		)
+	)
 	requestTime := fmt.Sprintf("%d", time.Now().Unix())
 	requestURL := fmt.Sprintf("%s?", apiURL)
 	message := map[string]string{
@@ -121,7 +121,7 @@ func buildRequestURL(consumerKey, consumerSecret, apiURL, apiMethod string, requ
 
 	// build sorted k/v string for sig
 	for i := range messageKeys {
-		sigQueryStr = fmt.Sprintf("%s&%s=%s",sigQueryStr,  messageKeys[i], escape(message[messageKeys[i]]))
+		sigQueryStr = fmt.Sprintf("%s&%s=%s", sigQueryStr, messageKeys[i], escape(message[messageKeys[i]]))
 	}
 	// drop initial &
 	sigQueryStr = sigQueryStr[1:]
