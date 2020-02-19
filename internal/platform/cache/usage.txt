@@ -1,0 +1,5 @@
+Cache is a package with caching system to decrease number of calls to external api to get the information from there.
+
+    This package provide an access to LRU cache, of provided size. Here we will have cache config instance which will
+consists of two parameters. One will set cache size, with number of items will be stored in cache until cache will
+call evict operation on every operation of setting value into the cache.
