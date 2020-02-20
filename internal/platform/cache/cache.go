@@ -103,6 +103,20 @@ func get (cache *Cache, key string) (interface{}, bool) {
 	return nil, false
 }
 
+// Purge knows hot to purge cache
+func (c *Cache)Purge() {
+	c.lock.Lock()
+	purge(c)
+	c.lock.Unlock()
+}
+
+// purge making purging cache
+func purge (cache *Cache) {
+	cache.entryList = list.New()
+	cache.items = make(map[string]*list.Element, cache.initialSize)
+	cache.currentSize = 0
+}
+
 // remove removes element from the cache
 func remove(cache *Cache) {
 	element := cache.entryList.Back()
