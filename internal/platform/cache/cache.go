@@ -12,21 +12,21 @@ var ErrInvalidConfig = errors.New("config values does not specified properly")
 
 // Config store required properties to use Cache
 type Config struct {
-	// ExpirationTime represents the default value of TimeToLeave parameter of any item in cache. If TTL of the item is
+	// DefaultDuration represents the default value of TimeToLeave parameter of any item in cache. If TTL of the item is
 	// expired we delete the item from the cache.
-	ExpirationTime int64
+	DefaultDuration time.Duration
 	// Size represents max size of the cache,excess of which entails evict of the item from the cache with LRU mechanics
 	Size int
 }
 
 // Cache is the representation of the LRUCache item
 type Cache struct {
-	entryList         *list.List
-	items             map[string]*list.Element
-	lock              sync.RWMutex
-	defaultExpiration int64
-	initialSize       int
-	currentSize       int
+	lock            sync.Mutex
+	entryList       *list.List
+	items           map[string]*list.Element
+	defaultDuration time.Duration
+	initialSize     int
+	currentSize     int
 }
 
 // entry is a value which will store key/value pair in the cache
@@ -38,22 +38,22 @@ type entry struct {
 
 // NewCache knows how to create Cache with given configuration
 func NewCache(cfg Config) (*Cache, error) {
-	if cfg.Size == 0 || cfg.ExpirationTime == 0 {
+	if cfg.Size == 0 || cfg.DefaultDuration == 0 {
 		return nil, ErrInvalidConfig
 	}
 	return &Cache{
-		entryList:         list.New(),
-		items:             make(map[string]*list.Element, cfg.Size),
-		lock:              sync.RWMutex{},
-		defaultExpiration: cfg.ExpirationTime,
-		initialSize:       cfg.Size,
+		entryList:       list.New(),
+		items:           make(map[string]*list.Element, cfg.Size),
+		lock:            sync.Mutex{},
+		defaultDuration: cfg.DefaultDuration,
+		initialSize:     cfg.Size,
 	}, nil
 }
 
 // Add knows how to add value or values to cache with given key
 func (c *Cache) Add(key string, value interface{}) {
 	c.lock.Lock()
-
+	add(c, key, value)
 	c.lock.Unlock()
 }
 
@@ -63,7 +63,44 @@ func add(cache *Cache, key string, value interface{}) {
 	if cache.currentSize >= cache.initialSize {
 		remove(cache)
 	}
+	if element, ok := cache.items[key]; ok && value != nil {
+		cache.entryList.MoveToFront(element)
+		entry := element.Value.(*entry)
+		entry.value = value
+		entry.expiresAt = time.Now().Add(cache.defaultDuration)
+		return
+	}
+	element := cache.entryList.PushFront(&entry{key:key,value:value, expiresAt:time.Now().Add(cache.defaultDuration)})
+	cache.items[key]= element
+	cache.currentSize++
+}
 
+// Get knows hot to get value from the cache, and if it exists in cache it returns cached value and true as a second
+// parameter to be able to operate with cache in map style. It makes it in concurrent safe way, with using a mutex lock
+func (c *Cache) Get(key string) (value interface{}, exist bool) {
+	c.lock.Lock()
+	value, exist = get(c, key)
+	c.lock.Unlock()
+	return
+}
+
+// get returns value from the cache if it exists there and appropriate bool value of the exist parameter
+func get (cache *Cache, key string) (interface{}, bool) {
+	if element, exist := cache.items[key]; exist {
+		entry := element.Value.(*entry)
+		// if entry time to live is expired, we delete this entry form the cache
+		if time.Now().After(entry.expiresAt) {
+			cache.entryList.Remove(element)
+			delete(cache.items, key)
+			if cache.currentSize > 0 {
+				cache.currentSize--
+			}
+			return nil, false
+		}
+		cache.entryList.MoveToFront(element)
+		return entry.value, exist
+	}
+	return nil, false
 }
 
 // remove removes element from the cache
