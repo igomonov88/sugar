@@ -17,7 +17,7 @@ func TestCache(t *testing.T) {
 	t.Log("Given we starting to test cache:")
 	{
 		cfg := Config{
-			DefaultDuration: 1 * time.Second,
+			DefaultDuration: 1 * time.Millisecond,
 			Size:            2,
 		}
 		rand.Seed(time.Now().UnixNano())
@@ -56,6 +56,7 @@ func TestCache(t *testing.T) {
 				t.Fatalf("\t%s\t Should remove old value if we try to add new item out of cache size.", failed)
 			}
 			t.Logf("\t%s\t Should remove old value if we try to add new item out of cache size.", success)
+			cache.Purge()
 		}
 
 		{
@@ -76,6 +77,22 @@ func TestCache(t *testing.T) {
 				t.Fatalf("\t%s\t Should be able to get last recently used items from cache.", failed)
 			}
 			t.Logf("\t%s\t Should be able to get last recently used items from cache.", success)
+			cache.Purge()
+		}
+
+		{
+			keys := make([]string, 0, cfg.Size)
+			for i := 0; i < cfg.Size; i++ {
+				cache.Add(fmt.Sprintf("key%v",strconv.Itoa(i)), i)
+				keys = append(keys, fmt.Sprintf("key%v",strconv.Itoa(i)))
+			}
+			time.Sleep(10 * time.Millisecond)
+			for i := range keys {
+				if _, exist := cache.Get(keys[i]); exist {
+					t.Fatalf("\t%s\t Should not beign able to get item with expired TTL.", failed)
+				}
+			}
+			t.Logf("\t%s\t Should not being able to get item with expired TTL.", success)
 		}
 	}
 }
