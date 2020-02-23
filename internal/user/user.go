@@ -84,7 +84,7 @@ func Create(ctx context.Context, db *sqlx.DB, nu NewUser, now time.Time) (*User,
 	const q = `INSERT INTO users (user_id, first_name, last_name, email, password_hash, date_created, date_updated) 
 				VALUES ($1, $2, $3, $4, $5, $6, $7);`
 
-	_, err = db.ExecContext(ctx, q, u.ID, u.FirstName, u.FirstName, u.Email, u.PasswordHash, u.DateCreated, u.DateUpdated)
+	_, err = db.ExecContext(ctx, q, u.ID, u.FirstName, u.LastName, u.Email, u.PasswordHash, u.DateCreated, u.DateUpdated)
 	if err != nil {
 		return nil, errors.Wrap(err, "inserting user")
 	}
