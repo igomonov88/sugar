@@ -26,7 +26,7 @@ func TestUser(t *testing.T) {
 		claims := auth.NewClaims(uuid.New().String(), now, time.Hour)
 
 		nu := user.NewUser{
-			FirstName:       "Igor",
+			FirstName:       "Maris",
 			LastName:        "Gomonov",
 			Email:           "gomonov.igor@gmail.com",
 			Roles:           []string{auth.RoleAdmin},

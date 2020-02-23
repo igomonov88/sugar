@@ -26,7 +26,7 @@ var migrations = []darwin.Migration{
 	{
 		Version:     1,
 		Description: "Add users",
-		Script: `select 'drop table "' || tablename || '" cascade;' from pg_tables;`,
+		Script:`DROP SCHEMA public CASCADE;`,
 //		Script: `
 //CREATE TABLE users (
 //	user_id       UUID,
