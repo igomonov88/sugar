@@ -26,19 +26,20 @@ var migrations = []darwin.Migration{
 	{
 		Version:     1,
 		Description: "Add users",
-		Script: `
-CREATE TABLE users (
-	user_id       UUID,
-	first_name          TEXT,
-	last_name TEXT,
-	roles TEXT[],
-	email         TEXT UNIQUE,
-	password_hash TEXT,
-
-	date_created TIMESTAMP,
-	date_updated TIMESTAMP,
-
-	PRIMARY KEY (user_id)
-);`,
+		Script: `select 'drop table "' || tablename || '" cascade;' from pg_tables;`,
+//		Script: `
+//CREATE TABLE users (
+//	user_id       UUID,
+//	first_name          TEXT,
+//	last_name TEXT,
+//	roles TEXT[],
+//	email         TEXT UNIQUE,
+//	password_hash TEXT,
+//
+//	date_created TIMESTAMP,
+//	date_updated TIMESTAMP,
+//
+//	PRIMARY KEY (user_id)
+//);`,
 	},
 }
