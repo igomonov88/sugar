@@ -61,14 +61,14 @@ func TestCache(t *testing.T) {
 
 		{
 			for i := 0; i < cfg.Size; i++ {
-				cache.Add(fmt.Sprintf("key%v",strconv.Itoa(i)), i)
+				cache.Add(fmt.Sprintf("key%v", strconv.Itoa(i)), i)
 			}
 			if _, exist := cache.Get("key0"); !exist {
 				t.Fatalf("\t%s\t Should be able to get value from cache.", failed)
 			}
 			cache.Add("key2", rand.Int31n(10))
 
-			if _, exist := cache.Get("key1"); exist{
+			if _, exist := cache.Get("key1"); exist {
 				t.Fatalf("\t%s\t Should remove value with low usage from cache.", failed)
 			}
 			_, zeroItemExist := cache.Get("key0")
@@ -83,8 +83,8 @@ func TestCache(t *testing.T) {
 		{
 			keys := make([]string, 0, cfg.Size)
 			for i := 0; i < cfg.Size; i++ {
-				cache.Add(fmt.Sprintf("key%v",strconv.Itoa(i)), i)
-				keys = append(keys, fmt.Sprintf("key%v",strconv.Itoa(i)))
+				cache.Add(fmt.Sprintf("key%v", strconv.Itoa(i)), i)
+				keys = append(keys, fmt.Sprintf("key%v", strconv.Itoa(i)))
 			}
 			time.Sleep(10 * time.Millisecond)
 			for i := range keys {
