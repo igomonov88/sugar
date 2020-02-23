@@ -13,7 +13,7 @@ var ErrInvalidConfig = errors.New("config values does not specified properly")
 // Config store required properties to use Cache
 type Config struct {
 	// DefaultDuration represents the default value of TimeToLeave parameter of any item in cache. If TTL of the item is
-	// expired we delete the item from the cache.
+	// expired we delete the item from the cache. Be
 	DefaultDuration time.Duration
 	// Size represents max size of the cache,excess of which entails evict of the item from the cache with LRU mechanics
 	Size int
@@ -36,8 +36,8 @@ type entry struct {
 	expiresAt time.Time
 }
 
-// NewCache knows how to create Cache with given configuration
-func NewCache(cfg Config) (*Cache, error) {
+// New knows how to create Cache with given configuration
+func New(cfg Config) (*Cache, error) {
 	if cfg.Size == 0 || cfg.DefaultDuration == 0 {
 		return nil, ErrInvalidConfig
 	}
@@ -70,8 +70,8 @@ func add(cache *Cache, key string, value interface{}) {
 		entry.expiresAt = time.Now().Add(cache.defaultDuration)
 		return
 	}
-	element := cache.entryList.PushFront(&entry{key:key,value:value, expiresAt:time.Now().Add(cache.defaultDuration)})
-	cache.items[key]= element
+	element := cache.entryList.PushFront(&entry{key: key, value: value, expiresAt: time.Now().Add(cache.defaultDuration)})
+	cache.items[key] = element
 	cache.currentSize++
 }
 
@@ -81,13 +81,14 @@ func (c *Cache) Get(key string) (value interface{}, exist bool) {
 	c.lock.Lock()
 	value, exist = get(c, key)
 	c.lock.Unlock()
-	return
+	return value, exist
 }
 
 // get returns value from the cache if it exists there and appropriate bool value of the exist parameter
-func get (cache *Cache, key string) (interface{}, bool) {
+func get(cache *Cache, key string) (interface{}, bool) {
 	if element, exist := cache.items[key]; exist {
 		entry := element.Value.(*entry)
+
 		// if entry time to live is expired, we delete this entry form the cache
 		if time.Now().After(entry.expiresAt) {
 			cache.entryList.Remove(element)
@@ -104,14 +105,14 @@ func get (cache *Cache, key string) (interface{}, bool) {
 }
 
 // Purge knows hot to purge cache
-func (c *Cache)Purge() {
+func (c *Cache) Purge() {
 	c.lock.Lock()
 	purge(c)
 	c.lock.Unlock()
 }
 
 // purge making purging cache
-func purge (cache *Cache) {
+func purge(cache *Cache) {
 	cache.entryList = list.New()
 	cache.items = make(map[string]*list.Element, cache.initialSize)
 	cache.currentSize = 0

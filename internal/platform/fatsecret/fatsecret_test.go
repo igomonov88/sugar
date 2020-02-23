@@ -5,8 +5,8 @@ import (
 )
 
 const (
-	Success = "\u2713"
-	Failed  = "\u2717"
+	success = "\u2713"
+	failed  = "\u2717"
 )
 
 func TestFatSecretClient(t *testing.T) {
@@ -20,9 +20,9 @@ func TestFatSecretClient(t *testing.T) {
 		}
 		client, err := Connect(cfg)
 		if err != nil {
-			t.Fatalf("\t%s\tShould be able to connect to fatSecret client : %s.", Failed, err)
+			t.Fatalf("\t%s\tShould be able to connect to fatSecret client : %s.", failed, err)
 		}
-		t.Logf("\t%s\tShould be able to connect to fatSecret client.", Success)
+		t.Logf("\t%s\tShould be able to connect to fatSecret client.", success)
 
 		type FoodsSearchResponse struct {
 			Foods struct {
@@ -35,23 +35,23 @@ func TestFatSecretClient(t *testing.T) {
 		}
 		fs := FoodsSearchResponse{}
 		if err := client.Search("mars", FoodsSearchMethod, &fs); err != nil {
-			t.Fatalf("\t%s\tShould be able to search for given query : %s.", Failed, err)
+			t.Fatalf("\t%s\tShould be able to search for given query : %s.", failed, err)
 		}
-		t.Logf("\t%s\tShould be able to search for given query.", Success)
+		t.Logf("\t%s\tShould be able to search for given query.", success)
 
 		t.Logf("Given we start testing negative flow.")
 		{
 			err := client.Search("qwerty", "qwerty", &fs)
 			if err != ErrMethodNotSupported {
-				t.Logf("\t%s\tUsage of unspecified search method should return: %s error but got: %s", Failed, ErrMethodNotSupported, err)
+				t.Logf("\t%s\tUsage of unspecified search method should return: %s error but got: %s", failed, ErrMethodNotSupported, err)
 			}
-			t.Logf("\t%s\tUsage of unspecified search method should return %s error.", Success, ErrMethodNotSupported)
+			t.Logf("\t%s\tUsage of unspecified search method should return %s error.", success, ErrMethodNotSupported)
 
 			cfg.ConsumerSecret = ""
 			if _, err := Connect(cfg); err != ErrInvalidConfig {
-				t.Fatalf("\t%s\tUsage of inaproppriate configuration should return: %s error but got: %s.", Failed, ErrInvalidConfig, err)
+				t.Fatalf("\t%s\tUsage of inaproppriate configuration should return: %s error but got: %s.", failed, ErrInvalidConfig, err)
 			}
-			t.Logf("\t%s\tUsage of inaproppriate configuration should return: %s error.", Success, ErrInvalidConfig)
+			t.Logf("\t%s\tUsage of inaproppriate configuration should return: %s error.", success, ErrInvalidConfig)
 		}
 	}
 }
