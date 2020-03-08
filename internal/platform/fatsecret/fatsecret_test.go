@@ -38,8 +38,6 @@ func TestFatSecretClient(t *testing.T) {
 			t.Fatalf("\t%s\tShould be able to search for given query : %s.", failed, err)
 		}
 		t.Logf("\t%s\tShould be able to search for given query.", success)
-
-		t.Logf("Given we start testing negative flow.")
 		{
 			err := client.Search("qwerty", "qwerty", &fs)
 			if err != ErrMethodNotSupported {
