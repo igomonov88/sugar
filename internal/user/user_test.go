@@ -15,8 +15,8 @@ import (
 
 // TestUser validates the full set of CRUD operations on User values.
 func TestUser(t *testing.T) {
-	db, _ := tests.NewUnit(t)
-	//defer teardown()
+	db, teardown := tests.NewUnit(t)
+	defer teardown()
 
 	t.Log("Given the need to work with User records.")
 	{
