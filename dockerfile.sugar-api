@@ -1,5 +1,5 @@
 # Build the Go Binary.
-FROM golang:1.13 as build_sales-api
+FROM golang:1.13 as build_sugar-api
 ENV CGO_ENABLED 0
 ARG VCS_REF
 ARG PACKAGE_NAME
@@ -52,4 +52,4 @@ LABEL org.opencontainers.image.created="${BUILD_DATE}" \
       org.opencontainers.image.authors="Igor Gomonov <gomonov.igor@gmail.com>" \
       org.opencontainers.image.source="https://github.com/igomonov88/sugar/cmd/${PACKAGE_PREFIX}${PACKAGE_NAME}" \
       org.opencontainers.image.revision="${VCS_REF}" \
-      org.ope
+      org.opencontainers.image.vendor="Igor Gomonov"

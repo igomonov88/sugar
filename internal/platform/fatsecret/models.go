@@ -21,4 +21,3 @@ type Food struct {
 	FoodDescription string `json:"food_description"`
 	FoodName        string `json:"food_name"`
 }
-

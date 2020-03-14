@@ -2,7 +2,7 @@ SHELL := /bin/bash
 
 export PROJECT = sugar
 
-all: sales-api metrics
+all: sugar-api metrics
 
 keys:
 	go run ./cmd/sugar-admin/main.go keygen private.pem
@@ -16,7 +16,7 @@ migrate:
 seed: migrate
 	go run ./cmd/sugar-admin/main.go --db-disable-tls=1 seed
 
-sales-api:
+sugar-api:
 	docker build \
 		-f dockerfile.sugar-api \
 		-t gcr.io/$(PROJECT)/sugar-api-amd64:1.0 \
@@ -42,7 +42,7 @@ down:
 	docker-compose down
 
 test:
-	go test ./...
+	go test -mod=vendor ./... -count=1
 
 clean:
 	docker system prune -f

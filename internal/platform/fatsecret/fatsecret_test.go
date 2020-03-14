@@ -1,6 +1,7 @@
 package fatsecret
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -37,6 +38,7 @@ func TestFatSecretClient(t *testing.T) {
 		if err := client.Search("mars", FoodsSearchMethod, &fs); err != nil {
 			t.Fatalf("\t%s\tShould be able to search for given query : %s.", failed, err)
 		}
+		fmt.Println(fs)
 		t.Logf("\t%s\tShould be able to search for given query.", success)
 		{
 			err := client.Search("qwerty", "qwerty", &fs)
