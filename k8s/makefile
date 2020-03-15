@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-export PROJECT = sugar
+export PROJECT = sugar-271117
 CLUSTER = sugar
 DATABASE = sugar-db
 ZONE = europe-west1-b

@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-export PROJECT = sugar
+export PROJECT = sugar-271117
 
 all: sugar-api metrics
 
