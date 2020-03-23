@@ -9,5 +9,6 @@ type SearchResult struct {
 type Food struct {
 	FoodName string  `json:"food_name"`
 	Carbs    float64 `json:"carbs"`
-	Grams    int64   `json:"grams"`
+	Units    string  `json:"units"`
+	Amount   float64 `json:"amount"`
 }

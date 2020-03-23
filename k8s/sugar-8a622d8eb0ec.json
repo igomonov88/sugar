@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "sugar-271117",
+  "private_key_id": "8a622d8eb0ec46a0d0e082b390dab5713dde27ca",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC/u7hQ+ZC8vqDN\nMWq+kBptZE+BjdXln1y5/SixRmd1s/5R5rnEvxvn5HnXuJqxwKRM6RZUftDwDNu6\n+n+yS5cRWiZ2S+gx9YcTGiaQS0KS3RS2+zdEEcElnpfZYUb3eSrMDwS1RjXRrlGY\nZ2FhdaMDqhfcvV35VoxAOEHA+MkIN10pwmnQpSzokuM9qUCbQpaDEboDEFpOzTcF\notaW0gMHipBQE3scFDVnxCJCPW2BQbp/DO5phsqxwQskGDCTPVxZBVlX/P7f2fJU\nYqbzIe23KAhgNyBc5bVkBP9h+yKn5oJ7YO1Qqltk4p8cO0kNqYhfGGqnhiVeGtRA\n/UcTtmoPAgMBAAECggEANfvwYxhJmOMhmnS6BerEDh3qxuL9ITiUHqf5j6Rvl/P0\nfPH2Rz+55zps1gDbyYWgnSkZyPOl95jfO0+xqa1f3RphbvhjacGkZQv9ZK5UEc7e\nuMCV6HwJQoLbZXDezuoWUzs9S573o1CuF7ev8wVwvyTisBu/fGdSePh+BwvlaoLS\nW0YNtgzxVrUUPj6tF8oDOdnbhdpCEaZ5DLBKpcHMSMsbSU48kx+wDVtNsTE4ouyF\npmlK2K0qWLjvhlZy2mAajCfW4FnE82dD0ynUZJoa4wpIam0Hr0rIlzBrG/9wMaz+\neYCaZNBmS8YySpW+BItF7dS5603mj299oyh5znzsaQKBgQD7kH6tYeiPTX0sFlTD\nleZYwzUYgx8Jhlxsx2X/86R5u+gRkahU2Tu5YPWCg2v/bM/7opZT799jE9KcAQxi\ni4d+1fXV+K4jJl7uNDvbTk1tgM25YixtLjfcGOg7KWbzQxLyQ5aaUppniOL5vnHt\nimLNkgi5qUDtz5kCImCfW6C4uQKBgQDDHSkrKYGO0IpX5qHc5qEPb0+2g+D5RT0b\nzY18s7kE/Wy04t7pSEJ0Vw9mBJpQKOQ/xjfO/l4FUW3hFS/YbHzhkPvzfrVmWIJN\nrwSuC7j9axOVEHWmHbLL23q9vIA7gPkaVAkd7XcwvZoa7t4nATVlKmgeCcfp79tB\nSRkLigPFBwKBgQDiPeVvkSpSFuKID91TuTBci9LopKP5MPlWa030ju5Q/QmNI248\nQNJRuj2SjxdFtFqoeGSyQHyq4lz7KIY26j2FeG+LbAdQXWXq3NcoOJex77EVFJHX\n70UVkODqtCV+icg0UUzUpY1vp9BZw0k61MZfEwL91pYqShXVsY0sRH+bIQKBgATf\npJicZ80ObnY1n5Np+1nsWNxhPOxdC2K3ZrJXtuZmAiIejJzdHjPTvOG6ebRI4TKq\nm9hCyExvtUPrCI/qXdAwk+qIHrXYviB8n6xNRKin1QxjJd0pXr7y04ULwVQ7K325\n3aRuuwxvn/rOPqRQxmmpfoJJkkHIqPxffA2qu99fAoGBAMwFEcffN7zliAB946FF\nUyegTzERQ+0ZEWE94Ufd5JCzZvLk4WOYTawxdxqedg+cksv0XO8AtmqKY6tqAWQM\nd33ktAZbiGDvRiyBfcZXnb0JIlRN4BFHaEizqCWiHI0H4zBlJGucTQWpkTZCSKYn\nBDv58qyRaiDPR6DFyd1jPfK5\n-----END PRIVATE KEY-----\n",
+  "client_email": "sugar-api@sugar-271117.iam.gserviceaccount.com",
+  "client_id": "106174604563676243418",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/sugar-api%40sugar-271117.iam.gserviceaccount.com"
+}

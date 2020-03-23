@@ -14,7 +14,7 @@ type Config struct {
 	APIURL         string
 }
 
-// StatusCheck returns nil if it can successfully talk to the database. It
+// StatusCheck returns nil if it can successfully talk to the fatsecret api. It
 // returns a non-nil error otherwise.
 func StatusCheck(ctx context.Context, c *Client) error {
 	ctx, span := trace.StartSpan(ctx, "platform.Search.StatusCheck")

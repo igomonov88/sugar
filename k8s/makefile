@@ -2,8 +2,11 @@ SHELL := /bin/bash
 
 export PROJECT = sugar-271117
 CLUSTER = sugar
-DATABASE = sugar-db
+DATABASE = sugar-271117:europe-west1:sugar-db
+#DATABASE = sugar-db
 ZONE = europe-west1-b
+PUBLIC_DB_IP = 34.76.188.232
+PRIVATE_DB_IP =
 
 config:
 	@echo Setting environment for $(PROJECT)
@@ -35,7 +38,7 @@ database:
 	@echo ======================================================================
 
 db-assign-ip:
-	gcloud sql instances patch $(DATABASE) --authorized-networks=[$(PUBLIC-IP)/32]
+	gcloud sql instances patch $(DATABASE) --authorized-networks=$(PUBLIC_DB_IP)/32
 	gcloud sql instances describe $(DATABASE)
 	@echo ======================================================================
 
