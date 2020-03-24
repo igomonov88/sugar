@@ -29,7 +29,14 @@ func StatusCheck(ctx context.Context, cfg Config) error {
 		return err
 	}
 	buf := bytes.NewBuffer(b)
-	resp, err := http.Post(cfg.APIURL, "application/json", buf)
+	url, err := buildRequestURL(cfg.APIURL, cfg.ConsumerKey, FoodSearchMethod, nil)
+	if err != nil {
+		return err
+	}
+	resp, err := http.Post(url, "application/json", buf)
+	if err != nil {
+		return err
+	}
 	if resp.StatusCode != http.StatusOK {
 		return errors.New("food data center api respond with status not OK")
 	}

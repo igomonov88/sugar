@@ -66,9 +66,46 @@ type Food struct {
 	// ScientificName the scientific name of the food.
 	ScientificName string `json:"scientificName, omitempty"`
 	// CommonNames contains any other names of the food
-	CommonNames []string `json:"commonNames, omitempty"`
+	CommonNames string `json:"commonNames, omitempty"`
 	// AdditionalDescriptions contains any additional descriptions of the food
 	AdditionalDescriptions string `json:"additionalDescriptions, omitempty"`
 	// FoodCode any A unique ID identifying the food within FNDDS.
 	FoodCode string `json:"foodCode, omitempty"`
+}
+
+type FoodDetailsResponse struct {
+	FoodClass     string          `json:"foodClass"`
+	Description   string          `json:"description"`
+	FoodNutrients []FoodNutrients `json:"foodNutrients"`
+	FoodPortions  []FoodPortion   `json:"foodPortions"`
+}
+
+type FoodNutrients struct {
+	Type     string   `json:"type"`
+	ID       int      `json:"id"`
+	Nutrient Nutrient `json:"nutrient"`
+	Amount   float64  `json:"amount"`
+}
+
+type Nutrient struct {
+	ID       int    `json:"id"`
+	Number   string `json:"number"`
+	Name     string `json:"name"`
+	Rank     int    `json:"rank"`
+	UnitName string `json:"unitName"`
+}
+
+type FoodPortion struct {
+	ID                 int         `json:"id"`
+	MeasureUnit        MeasureUnit `json:"measureUnit"`
+	Modifier           string      `json:"modifier"`
+	GramWeight         int         `json:"gramWeight"`
+	PortionDescription string      `json:"portionDescription"`
+	SequenceNumber     int         `json:"sequenceNumber"`
+}
+
+type MeasureUnit struct {
+	ID           int    `json:"id"`
+	Name         string `json:"name"`
+	Abbreviation string `json:"abbreviation"`
 }
