@@ -1,4 +1,4 @@
-package food_data_center
+package food_data_center_api
 
 import (
 	"bytes"
@@ -22,14 +22,14 @@ func StatusCheck(ctx context.Context, cfg Config) error {
 	ctx, span := trace.StartSpan(ctx, "platform.Search.StatusCheck")
 	defer span.End()
 	fs := FoodSearchRequest{
-		GeneralSearchInput: "cheese",
+		SearchInput: "cheese",
 	}
 	b, err := json.Marshal(&fs)
 	if err != nil {
 		return err
 	}
 	buf := bytes.NewBuffer(b)
-	url, err := buildRequestURL(cfg.APIURL, cfg.ConsumerKey, FoodSearchMethod, nil)
+	url, err := buildRequestURL(cfg.APIURL, cfg.ConsumerKey, foodSearchMethod, nil)
 	if err != nil {
 		return err
 	}
