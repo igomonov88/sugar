@@ -33,14 +33,13 @@ func TestFoodDataCenterClient(t *testing.T) {
 			t.Log("\tWhen handling the request to Food Data Center.")
 			{
 				req := FoodSearchRequest{
-					SearchInput: "bounty",
+					SearchInput: "mc donalds cheeseburger",
 				}
 				resp, err := FoodSearch(ctx, client, req)
 				if err != nil {
 					t.Fatalf("\t%s\tShould be able make search request to Food Data Center: %s.", failed, err)
 				}
 				t.Logf("\t%s\tShould be able make search request to Food Data Center.", success)
-
 				t.Log("\tWhen try to get FDCID value from response for making another method call.")
 				{
 					if len(resp.Foods) == 0 {
@@ -58,7 +57,8 @@ func TestFoodDataCenterClient(t *testing.T) {
 						if len(resp.FoodNutrients) == 0 {
 							t.Logf("\t%s\tShould be able make details request to Food Data Center", success)
 						}
-						t.Logf("RESPONSE: %v", resp.Description)
+						t.Logf("RESPONSE 2: %v \n", resp.FoodNutrients[0].ID)
+						t.Logf("RESPONSE 2: %v \n", resp.FoodNutrients[0].Nutrient.Name)
 						t.Logf("\t%s\tShould be able make details request to Food Data Center.", success)
 					}
 				}

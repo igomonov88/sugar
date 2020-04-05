@@ -25,20 +25,48 @@ func Migrate(db *sqlx.DB) error {
 var migrations = []darwin.Migration{
 	{
 		Version:     1,
-		Description: "Add users",
+		Description: "Add food table",
 		Script: `
-CREATE TABLE users (
-	user_id       UUID,
-	first_name          TEXT,
-	last_name TEXT,
-	roles TEXT[],
-	email         TEXT UNIQUE,
-	password_hash TEXT,
-
-	date_created TIMESTAMP,
-	date_updated TIMESTAMP,
-
-	PRIMARY KEY (user_id)
+	CREATE TABLE IF NOT EXISTS food (
+		id SERIAL PRIMARY KEY,
+		fdc_id INT UNIQUE NOT NULL,
+		description VARCHAR,
+		brand_owner VARCHAR
+	);`,
+	},
+	{
+		Version:     2,
+		Description: "Add search_food table",
+		Script: `
+	CREATE TABLE IF NOT EXISTS search_food (
+		search_input VARCHAR NOT NULL,
+		fdc_id INT NOT NULL
+	);`,
+	},
+	{
+		Version:     3,
+		Description: "Add nutrients table",
+		Script: `
+	CREATE TABLE IF NOT EXISTS nutrients (
+  		id SERIAL PRIMARY KEY,
+  		number INT NOT NULL,
+  		name VARCHAR NOT NULL,
+  		rank INT,
+  		unit_name VARCHAR
+	);`,
+	},
+	{
+		Version:     4,
+		Description: "Add food_nutrients table",
+		Script: `
+	CREATE TABLE IF NOT EXISTS food_nutrient (
+  		id SERIAL PRIMARY KEY,
+  		type VARCHAR,
+  		amount FLOAT NOT NULL,
+  		nutrient_id INT NOT NULL,
+  		fdc_id INT NOT NULL, 
+  		FOREIGN KEY(fdc_id) REFERENCES food(fdc_id),
+  		FOREIGN KEY(nutrient_id) REFERENCES nutrients(id)
 );`,
 	},
 }

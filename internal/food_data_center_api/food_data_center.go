@@ -28,7 +28,7 @@ var (
 	ErrFailedToComposeUrl = errors.New("failed to compose url")
 
 	// ErrFromExternalAPI is used when we got not an http 200OK status in response from external api.
-	ErrFromExternalAPI = errors.New("status is not 200OK in response from call to external api")
+	ErrFromExternalAPI = errors.New("error from call to external api")
 )
 
 // Client makes all operations with fatSecret external api.
@@ -74,7 +74,12 @@ func FoodSearch(ctx context.Context, client *Client, request FoodSearchRequest) 
 
 	// Check response status code. If it's not 200 return error.
 	if resp.StatusCode != http.StatusOK {
-		return nil, ErrFromExternalAPI
+		errResp := FoodDataCenterErrorResponse{}
+		err := json.NewDecoder(resp.Body).Decode(&errResp)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to decode error response body.")
+		}
+		return nil, errors.Wrapf(ErrFromExternalAPI, "status code: %v, error: %v, message: %v, path: %v", resp.StatusCode, errResp.Error, errResp.Message, errResp.Path)
 	}
 
 	// Compose internal response value.
@@ -114,8 +119,14 @@ func FoodDetails(ctx context.Context, client *Client, req FoodDetailsRequest) (*
 		}
 	}
 
+	// Check response status code. If it's not 200 return error.
 	if resp.StatusCode != http.StatusOK {
-		return nil, ErrFromExternalAPI
+		errResp := FoodDataCenterErrorResponse{}
+		err := json.NewDecoder(resp.Body).Decode(&errResp)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to decode error response body.")
+		}
+		return nil, errors.Wrapf(ErrFromExternalAPI, "status code: %v, error: %v, message: %v, path: %v", resp.StatusCode, errResp.Error, errResp.Message, errResp.Path)
 	}
 
 	fdi := FoodDetailsInternalResponse{}
@@ -215,13 +226,13 @@ func buildRequestURL(apiURL string, consumerKey string, searchMethod string, req
 	}
 	switch searchMethod {
 	case foodSearchMethod:
-		return fmt.Sprintf("%s/search?api_key=%s", apiURL, consumerKey), nil
+		return fmt.Sprintf("%ssearch?api_key=%s", apiURL, consumerKey), nil
 	case foodDetailMethod:
 		fdcID, ok := requestParam.(int)
 		if !ok {
 			return "", ErrFailedToComposeUrl
 		}
-		return fmt.Sprintf("%s/%v?api_key=%s", apiURL, fdcID, consumerKey), nil
+		return fmt.Sprintf("%s%v?api_key=%s", apiURL, fdcID, consumerKey), nil
 	default:
 		return "", ErrMethodNotSupported
 	}

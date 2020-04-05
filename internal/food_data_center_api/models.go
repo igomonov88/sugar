@@ -29,7 +29,7 @@ type FoodDetailsResponse struct {
 	// Description is product description
 	Description string `json:"description"`
 	// FoodNutrients represents nutrients of given product
-	FoodNutrients []FoodNutrients `json:"food_nutrients"`
+	FoodNutrients []FoodNutrient `json:"food_nutrients"`
 	// FoodPortions represents portion of given product
 	FoodPortions []FoodPortion `json:"food_portions"`
 }
@@ -87,39 +87,29 @@ type Food struct {
 	FDCID int `json:"fdcId"`
 	// Description the description of the food
 	Description string `json:"description"`
-	// DataType the type of the food data.
-	DataType string `json:"dataType"`
-	// PublishedDate date the item was published to FDC.
-	PublishedDate string `json:"publishedDate"`
 	// BrandOwner brand owner for the food
 	BrandOwner string `json:"brandOwner"`
-	// Ingredients the list of ingredients (as it appears on the product label).
-	Ingredients string `json:"ingredients"`
-	// Score is relative score indicating how well the food matches the search criteria.
-	Score float64 `json:"score"`
-	// ScientificName the scientific name of the food.
-	ScientificName string `json:"scientificName, omitempty"`
-	// CommonNames contains any other names of the food
-	CommonNames string `json:"commonNames, omitempty"`
-	// AdditionalDescriptions contains any additional descriptions of the food
-	AdditionalDescriptions string `json:"additionalDescriptions, omitempty"`
-	// FoodCode any A unique ID identifying the food within FNDDS.
-	FoodCode string `json:"foodCode, omitempty"`
 }
 
 type FoodDetailsInternalRequest struct {
-	// FDCID Unique ID of the food.
 	FDCID int `json:"fdcId"`
 }
 
 type FoodDetailsInternalResponse struct {
-	FoodClass     string          `json:"foodClass"`
-	Description   string          `json:"description"`
-	FoodNutrients []FoodNutrients `json:"foodNutrients"`
-	FoodPortions  []FoodPortion   `json:"foodPortions"`
+	FoodClass     string         `json:"foodClass"`
+	Description   string         `json:"description"`
+	FoodNutrients []FoodNutrient `json:"foodNutrients"`
+	FoodPortions  []FoodPortion  `json:"foodPortions"`
 }
 
-type FoodNutrients struct {
+// FoodDataCenterErrorResponse used to serialize error response from external api
+type FoodDataCenterErrorResponse struct {
+	Error   string `json:"error"`
+	Message string `json:"message"`
+	Path    string `json:"path"`
+}
+
+type FoodNutrient struct {
 	Type     string   `json:"type"`
 	ID       int      `json:"id"`
 	Nutrient Nutrient `json:"nutrient"`
@@ -127,8 +117,6 @@ type FoodNutrients struct {
 }
 
 type Nutrient struct {
-	ID       int    `json:"id"`
-	Number   string `json:"number"`
 	Name     string `json:"name"`
 	Rank     int    `json:"rank"`
 	UnitName string `json:"unitName"`
