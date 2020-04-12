@@ -8,17 +8,17 @@ import (
 	"go.opencensus.io/trace"
 )
 
-func Search(ctx context.Context, db *sqlx.DB, search_input string) ([]Food, error) {
+func Search(ctx context.Context, db *sqlx.DB, searchInput string) ([]Food, error) {
 	ctx, span := trace.StartSpan(ctx, "internal.food_data_storage.FoodSearch")
 	defer span.End()
 
 	var foods []Food
 	const querySelectFood = `
 	SELECT * FROM food WHERE EXISTS (
-		SELECT fdc_id FROM search_food WHERE search_input LIKE '%$1%'
-	)`
+		SELECT fdc_id FROM search_food WHERE search_input LIKE '%' || $1 || '%'
+	);`
 
-	err := db.SelectContext(ctx, &foods, querySelectFood, search_input)
+	err := db.SelectContext(ctx, &foods, querySelectFood, searchInput)
 	if err != nil {
 		return nil, errors.Wrap(err, "selecting food")
 	}
@@ -26,16 +26,28 @@ func Search(ctx context.Context, db *sqlx.DB, search_input string) ([]Food, erro
 	return foods, nil
 }
 
-func AddFood(ctx context.Context, db *sqlx.DB, nf Food) error {
+func AddFood(ctx context.Context, db *sqlx.DB, nf Food, foodSearchInput string) error {
 	ctx, span := trace.StartSpan(ctx, "internal,food_data_storage.AddFood")
 	defer span.End()
-	const queryAddFood = `INSERT INTO food (fdc_id, description, brand_owner) VALUES ( $1, $2, $3 )`
-
-	_, err := db.ExecContext(ctx, queryAddFood, &nf.FDCID, &nf.Description, &nf.BrandOwner)
+	const (
+		queryAddFood       = `INSERT INTO food (fdc_id, description, brand_owner) VALUES ($1, $2, $3)`
+		queryAddFoodSearch = `INSERT INTO search_food (search_input, fdc_id) VALUES ($1, $2)`
+	)
+	tx, err := db.Begin()
 	if err != nil {
-		return errors.Wrap(err, "inserting food")
+		return errors.Wrap(err, "begin transaction")
 	}
-
+	_, err = tx.ExecContext(ctx, queryAddFood, &nf.FDCID, &nf.Description, &nf.BrandOwner)
+	if err != nil {
+		tx.Rollback()
+		return errors.Wrap(err, "inserting food to food")
+	}
+	_, err = tx.ExecContext(ctx, queryAddFoodSearch, foodSearchInput, &nf.FDCID)
+	if err != nil {
+		tx.Rollback()
+		return errors.Wrap(err, "inserting food search_food")
+	}
+	tx.Commit()
 	return nil
 }
 
@@ -58,7 +70,7 @@ func GetDetails(ctx context.Context, db *sqlx.DB, fdcID int) (*FoodDetails, erro
 		return nil, errors.Wrap(err, "selecting from food_nutrients")
 	}
 
-	if err := db.SelectContext(ctx, &description, queryGetDescription, fdcID); err != nil {
+	if err := db.GetContext(ctx, &description, queryGetDescription, fdcID); err != nil {
 		return nil, errors.Wrap(err, "selecting from food")
 	}
 
@@ -71,8 +83,8 @@ func AddDetails(ctx context.Context, db *sqlx.DB, fdcID int, fd FoodDetails) err
 
 	const (
 		queryAddFood          = `INSERT INTO food (fdc_id, description) VALUES ($1, $2) ON CONFLICT DO NOTHING;`
-		queryAddNutrients     = `INSERT INTO nutrients (name, rank, unit_name) VALUES ($1, $2, $3);`
-		queryAddFoodNutrients = `INSERT INTO food_nutrients (type, amount, nutrient_id, fdc_id) VALUES ($1,$2,$3,$4);`
+		queryAddNutrients     = `INSERT INTO nutrients (name, rank, unit_name, number) VALUES ($1, $2, $3, $4);`
+		queryAddFoodNutrients = `INSERT INTO food_nutrient (type, amount, nutrient_id, fdc_id) VALUES ($1,$2,$3,$4);`
 	)
 
 	tx, err := db.Begin()
@@ -88,17 +100,17 @@ func AddDetails(ctx context.Context, db *sqlx.DB, fdcID int, fd FoodDetails) err
 
 	for i := 0; i <= len(fd.FoodNutrients)-1; i++ {
 		result, err := tx.ExecContext(ctx, queryAddNutrients,
-			fd.FoodNutrients[i].Nutrient.Name, fd.FoodNutrients[i].Nutrient.Rank, fd.FoodNutrients[i].Nutrient.UnitName)
+			fd.FoodNutrients[i].Name, fd.FoodNutrients[i].Rank, fd.FoodNutrients[i].UnitName, fd.FoodNutrients[i].Number)
 		if err != nil {
 			tx.Rollback()
 			return errors.Wrap(err, "inserting nutrients")
 		}
 
 		nID, _ := result.LastInsertId()
-		_, err = tx.ExecContext(ctx, queryAddFoodNutrients, fd.FoodNutrients[i].Type, fd.FoodNutrients[i].Amount, nID)
+		_, err = tx.ExecContext(ctx, queryAddFoodNutrients, fd.FoodNutrients[i].Type, fd.FoodNutrients[i].Amount, nID, fdcID)
 		if err != nil {
 			tx.Rollback()
-			return errors.Wrap(err, "inserting food_nutrients")
+			return errors.Wrap(err, "inserting food_nutrient")
 		}
 	}
 	tx.Commit()
