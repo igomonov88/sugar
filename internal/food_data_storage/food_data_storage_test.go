@@ -9,7 +9,7 @@ import (
 	"github.com/igomonov88/sugar/internal/tests"
 )
 
-func TestFoodDAtaStorage(t *testing.T) {
+func TestFoodDataStorage(t *testing.T) {
 	db, teardown := tests.NewUnit(t)
 	defer teardown()
 	ctx := tests.Context()
