@@ -14,12 +14,12 @@ type FoodDetails struct {
 
 type FoodNutrient struct {
 	Type   string  `db:"type"`
-	ID     int     `db:"id"`
 	Amount float64 `db:"amount"`
 	Nutrient
 }
 
 type Nutrient struct {
+	ID       int    `db:"id"`
 	Name     string `db:"name"`
 	Rank     int    `db:"rank"`
 	Number   int    `db:"number"`

@@ -94,6 +94,7 @@ func TestFoodDAtaStorage(t *testing.T) {
 				if diff := cmp.Diff(food.Description, foodDetails); diff != "" {
 					t.Logf("\t%s\tShould be able to get food details from storage.", tests.Success)
 				}
+				t.Log(foodDetails.FoodNutrients[0].Nutrient.ID)
 			}
 
 		}

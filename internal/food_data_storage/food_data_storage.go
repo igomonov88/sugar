@@ -83,7 +83,7 @@ func AddDetails(ctx context.Context, db *sqlx.DB, fdcID int, fd FoodDetails) err
 
 	const (
 		queryAddFood          = `INSERT INTO food (fdc_id, description) VALUES ($1, $2) ON CONFLICT DO NOTHING;`
-		queryAddNutrients     = `INSERT INTO nutrients (name, rank, unit_name, number) VALUES ($1, $2, $3, $4);`
+		queryAddNutrients     = `INSERT INTO nutrients (name, rank, unit_name, number) VALUES ($1, $2, $3, $4) RETURNING id;`
 		queryAddFoodNutrients = `INSERT INTO food_nutrient (type, amount, nutrient_id, fdc_id) VALUES ($1,$2,$3,$4);`
 	)
 
@@ -99,14 +99,19 @@ func AddDetails(ctx context.Context, db *sqlx.DB, fdcID int, fd FoodDetails) err
 	}
 
 	for i := 0; i <= len(fd.FoodNutrients)-1; i++ {
-		result, err := tx.ExecContext(ctx, queryAddNutrients,
+		var nID int
+		row := tx.QueryRowContext(ctx, queryAddNutrients,
 			fd.FoodNutrients[i].Name, fd.FoodNutrients[i].Rank, fd.FoodNutrients[i].UnitName, fd.FoodNutrients[i].Number)
 		if err != nil {
 			tx.Rollback()
 			return errors.Wrap(err, "inserting nutrients")
 		}
 
-		nID, _ := result.LastInsertId()
+		if err := row.Scan(&nID); err != nil {
+			tx.Rollback()
+			return errors.Wrap(err, "scanning nutrientID")
+		}
+
 		_, err = tx.ExecContext(ctx, queryAddFoodNutrients, fd.FoodNutrients[i].Type, fd.FoodNutrients[i].Amount, nID, fdcID)
 		if err != nil {
 			tx.Rollback()
