@@ -44,8 +44,8 @@ func Connect(cfg Config) (*Client, error) {
 	return &Client{cfg}, nil
 }
 
-// FoodSearch is searching for food given the request parameters.
-func FoodSearch(ctx context.Context, client *Client, request FoodSearchRequest) (*FoodSearchResponse, error) {
+// Search is searching for food given the request parameters.
+func Search(ctx context.Context, client *Client, request FoodSearchRequest) (*FoodSearchResponse, error) {
 	ctx, span := trace.StartSpan(ctx, "internal.FoodDataCenter.Search")
 	defer span.End()
 

@@ -35,7 +35,7 @@ func TestFoodDataCenterClient(t *testing.T) {
 				req := FoodSearchRequest{
 					SearchInput: "mc donalds cheeseburger",
 				}
-				resp, err := FoodSearch(ctx, client, req)
+				resp, err := Search(ctx, client, req)
 				if err != nil {
 					t.Fatalf("\t%s\tShould be able make search request to Food Data Center: %s.", failed, err)
 				}
