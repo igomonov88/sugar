@@ -43,7 +43,7 @@ func (f *Food) Search(ctx context.Context, w http.ResponseWriter, r *http.Reques
 	}
 	if len(result) != 0 {
 		var foodSearchResp api.FoodSearchResponse
-		for i:=0; i < len(result) -1; i++ {
+		for i := 0; i < len(result)-1; i++ {
 			food := api.Food{
 				FDCID:       result[i].FDCID,
 				Description: result[i].Description,

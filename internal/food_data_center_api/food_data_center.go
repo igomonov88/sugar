@@ -52,7 +52,6 @@ func Search(ctx context.Context, client *Client, request FoodSearchRequest) (*Fo
 	// Compose internal request value.
 	req := FoodSearchInternalRequest{
 		GeneralSearchInput: request.SearchInput,
-		BrandOwner:         request.BrandOwner,
 	}
 
 	// Create a context with a timeout of 120 seconds.

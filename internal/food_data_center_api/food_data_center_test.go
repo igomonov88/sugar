@@ -57,8 +57,6 @@ func TestFoodDataCenterClient(t *testing.T) {
 						if len(resp.FoodNutrients) == 0 {
 							t.Logf("\t%s\tShould be able make details request to Food Data Center", success)
 						}
-						t.Logf("RESPONSE 2: %v \n", resp.FoodNutrients[0].ID)
-						t.Logf("RESPONSE 2: %v \n", resp.FoodNutrients[0].Nutrient.Name)
 						t.Logf("\t%s\tShould be able make details request to Food Data Center.", success)
 					}
 				}

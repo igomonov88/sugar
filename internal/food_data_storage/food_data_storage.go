@@ -29,24 +29,29 @@ func Search(ctx context.Context, db *sqlx.DB, searchInput string) ([]Food, error
 func AddFood(ctx context.Context, db *sqlx.DB, nf Food, foodSearchInput string) error {
 	ctx, span := trace.StartSpan(ctx, "internal,food_data_storage.AddFood")
 	defer span.End()
+
 	const (
 		queryAddFood       = `INSERT INTO food (fdc_id, description, brand_owner) VALUES ($1, $2, $3)`
 		queryAddFoodSearch = `INSERT INTO search_food (search_input, fdc_id) VALUES ($1, $2)`
 	)
+
 	tx, err := db.Begin()
 	if err != nil {
 		return errors.Wrap(err, "begin transaction")
 	}
 	_, err = tx.ExecContext(ctx, queryAddFood, &nf.FDCID, &nf.Description, &nf.BrandOwner)
 	if err != nil {
+		// TODO: handle rollback error
 		tx.Rollback()
 		return errors.Wrap(err, "inserting food to food")
 	}
 	_, err = tx.ExecContext(ctx, queryAddFoodSearch, foodSearchInput, &nf.FDCID)
 	if err != nil {
+		// TODO: handle rollback error
 		tx.Rollback()
 		return errors.Wrap(err, "inserting food search_food")
 	}
+	// TODO: handle commit error
 	tx.Commit()
 	return nil
 }
@@ -94,6 +99,7 @@ func AddDetails(ctx context.Context, db *sqlx.DB, fdcID int, fd FoodDetails) err
 
 	_, err = tx.ExecContext(ctx, queryAddFood, fdcID, fd.Description)
 	if err != nil {
+		// TODO: handle rollback error
 		tx.Rollback()
 		return errors.Wrap(err, "inserting food")
 	}
@@ -103,22 +109,25 @@ func AddDetails(ctx context.Context, db *sqlx.DB, fdcID int, fd FoodDetails) err
 		row := tx.QueryRowContext(ctx, queryAddNutrients,
 			fd.FoodNutrients[i].Name, fd.FoodNutrients[i].Rank, fd.FoodNutrients[i].UnitName, fd.FoodNutrients[i].Number)
 		if err != nil {
+			// TODO: handle rollback error
 			tx.Rollback()
 			return errors.Wrap(err, "inserting nutrients")
 		}
 
 		if err := row.Scan(&nID); err != nil {
+			// TODO: handle rollback error
 			tx.Rollback()
 			return errors.Wrap(err, "scanning nutrientID")
 		}
 
 		_, err = tx.ExecContext(ctx, queryAddFoodNutrients, fd.FoodNutrients[i].Type, fd.FoodNutrients[i].Amount, nID, fdcID)
 		if err != nil {
+			// TODO: handle rollback error
 			tx.Rollback()
 			return errors.Wrap(err, "inserting food_nutrient")
 		}
 	}
+	// TODO: handle commit error
 	tx.Commit()
-
 	return nil
 }

@@ -4,8 +4,6 @@ package food_data_center_api
 type FoodSearchRequest struct {
 	// SearchInput is the search string for given food
 	SearchInput string `json:"search_input"`
-	// Brand owner for the food
-	BrandOwner string `json:"brand_owner"`
 }
 
 // FoodSearchResponse represents the request result of food search request

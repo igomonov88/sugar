@@ -10,12 +10,12 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
+
 	"github.com/igomonov88/sugar/internal/platform/auth"
 	"github.com/igomonov88/sugar/internal/platform/database/databasetest"
 	"github.com/igomonov88/sugar/internal/platform/web"
 	"github.com/igomonov88/sugar/internal/schema"
-	"github.com/igomonov88/sugar/internal/user"
-	"github.com/jmoiron/sqlx"
 
 	"github.com/igomonov88/sugar/internal/platform/database"
 	_ "github.com/igomonov88/sugar/internal/platform/database/databasetest"
@@ -104,10 +104,6 @@ func NewIntegration(t *testing.T) *Test {
 	// Initialize and seed database. Store the cleanup function call later.
 	db, cleanup := NewUnit(t)
 
-	if err := schema.Seed(db); err != nil {
-		t.Fatal(err)
-	}
-
 	// Create the logger to use.
 	logger := log.New(os.Stdout, "TEST : ", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
 
@@ -137,26 +133,6 @@ func NewIntegration(t *testing.T) *Test {
 // Teardown releases any resources used for the test.
 func (test *Test) Teardown() {
 	test.cleanup()
-}
-
-// Token generates an authenticated token for a user.
-func (test *Test) Token(email, pass string) string {
-	test.t.Helper()
-
-	claims, err := user.Authenticate(
-		context.Background(), test.DB, time.Now(),
-		email, pass,
-	)
-	if err != nil {
-		test.t.Fatal(err)
-	}
-
-	tkn, err := test.Authenticator.GenerateToken(claims)
-	if err != nil {
-		test.t.Fatal(err)
-	}
-
-	return tkn
 }
 
 //Context returns an app level context for testing.
