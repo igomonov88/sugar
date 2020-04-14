@@ -2,7 +2,6 @@
 package main
 
 import (
-	"context"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -10,15 +9,12 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"time"
 
 	"github.com/ardanlabs/conf"
 	"github.com/pkg/errors"
 
-	"github.com/igomonov88/sugar/internal/platform/auth"
 	"github.com/igomonov88/sugar/internal/platform/database"
 	schema2 "github.com/igomonov88/sugar/internal/schema"
-	"github.com/igomonov88/sugar/internal/user"
 )
 
 func main() {
@@ -71,8 +67,6 @@ func run() error {
 		err = migrate(dbConfig)
 	case "seed":
 		err = seed(dbConfig)
-	case "useradd":
-		err = useradd(dbConfig, cfg.Args.Num(1), cfg.Args.Num(2))
 	case "keygen":
 		err = keygen(cfg.Args.Num(1))
 	default:
@@ -140,21 +134,6 @@ func useradd(cfg database.Config, email, password string) error {
 		return nil
 	}
 
-	ctx := context.Background()
-
-	nu := user.NewUser{
-		Email:           email,
-		Password:        password,
-		PasswordConfirm: password,
-		Roles:           []string{auth.RoleAdmin, auth.RoleUser},
-	}
-
-	u, err := user.Create(ctx, db, nu, time.Now())
-	if err != nil {
-		return err
-	}
-
-	fmt.Println("User created with id:", u.ID)
 	return nil
 }
 
