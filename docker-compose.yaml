@@ -24,7 +24,7 @@ services:
     container_name: metrics
     networks:
       - shared-network
-    image: gcr.io/${PROJECT}/metrics-amd64:1.0
+    image: igorgomonov/sugar-metrics-amd64:1.0
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
@@ -44,11 +44,11 @@ services:
       - 5432:5432
 
   # This is the core CRUD based service.
-  ssugar-api:
+  sugar-api:
     container_name: sales-api
     networks:
       - shared-network
-    image: gcr.io/${PROJECT}/sugar-api-amd64:1.0
+    image: igorgomonov/sugar-api-amd64:1.0
     ports:
       - 3000:3000 # CRUD API
       - 4000:4000 # DEBUG API

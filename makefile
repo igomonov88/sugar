@@ -1,7 +1,5 @@
 SHELL := /bin/bash
 
-export PROJECT = sugar-271117
-
 all: sugar-api metrics
 
 keys:
@@ -19,7 +17,7 @@ seed: migrate
 sugar-api:
 	docker build \
 		-f dockerfile.sugar-api \
-		-t gcr.io/$(PROJECT)/sugar-api-amd64:1.0 \
+		-t igorgomonov/sugar-api-amd64:1.0 \
 		--build-arg PACKAGE_NAME=sugar-api \
 		--build-arg VCS_REF=`git rev-parse HEAD` \
 		--build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
@@ -28,7 +26,7 @@ sugar-api:
 metrics:
 	docker build \
 		-f dockerfile.metrics \
-		-t gcr.io/$(PROJECT)/metrics-amd64:1.0 \
+		-t igorgomonov/sugar-metrics-amd64:1.0 \
 		--build-arg PACKAGE_NAME=metrics \
 		--build-arg PACKAGE_PREFIX=sidecar/ \
 		--build-arg VCS_REF=`git rev-parse HEAD` \
