@@ -25,7 +25,7 @@ type Food struct {
 	// ADD OTHER STATE LIKE THE LOGGER AND CONFIG HERE.
 }
 
-// Search returns
+// Search returns result of the food with food ids from given search query
 func (f *Food) Search(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
 	ctx, span := trace.StartSpan(ctx, "handlers.Food.Search")
 	defer span.End()
@@ -60,4 +60,32 @@ func (f *Food) Search(ctx context.Context, w http.ResponseWriter, r *http.Reques
 	}
 
 	return web.Respond(ctx, w, food, http.StatusOK)
+}
+
+// Details returns info about product with given food detail
+func (f *Food) Details(ctx context.Context, w http.ResponseWriter, r *http.Request, params map[string]string) error {
+	ctx, span := trace.StartSpan(ctx, "handlers.Food.Details")
+	defer span.End()
+
+	var foodDetailsReq api.FoodDetailsRequest
+	if err := web.Decode(r, &foodDetailsReq); err != nil {
+		return errors.Wrap(err, "")
+	}
+
+	//Check for result from given details
+	result, err := storage.GetDetails(ctx, f.db, foodDetailsReq.FDCID)
+	if err != nil {
+		return errors.Wrapf(err, "Search input %v", foodDetailsReq.FDCID)
+	}
+	if result != nil {
+		var foodDetailsResp api.FoodDetailsResponse
+		foodDetailsResp.Description = result.Description
+		return web.Respond(ctx, w, foodDetailsResp, http.StatusOK)
+	}
+
+	details, err := api.FoodDetails(ctx, f.apiClient, foodDetailsReq)
+	if err != nil {
+		errors.Wrapf(err, "")
+	}
+	return web.Respond(ctx, w, details, http.StatusOK)
 }
