@@ -67,7 +67,7 @@ func run() error {
 			Password   string `conf:"default:postgres,noprint"`
 			Host       string `conf:"default:0.0.0.0"`
 			Name       string `conf:"default:postgres"`
-			DisableTLS bool   `conf:"default:false"`
+			DisableTLS bool   `conf:"default:true"`
 		}
 		Auth struct {
 			KeyID          string `conf:"default:1"`
