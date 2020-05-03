@@ -30,7 +30,7 @@ func TestFoodAPI(t *testing.T) {
 	if err != nil {
 		t.Fatalf("\t%s\tShould be able to connect to Food Data Center api", tests.Failed)
 	}
-	tests := FoodAPITests {
+	tests := FoodAPITests{
 		app: handlers.API("develop", shutdown, test.Log, test.DB, fdcClient),
 	}
 
@@ -69,5 +69,5 @@ func (ft *FoodAPITests) postSearch200(t *testing.T) {
 }
 
 type FoodAPITests struct {
-	app        http.Handler
+	app http.Handler
 }

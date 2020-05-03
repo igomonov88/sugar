@@ -88,7 +88,7 @@ func run() error {
 
 	if err := conf.Parse(os.Args[1:], "SUGAR", &cfg); err != nil {
 		if err == conf.ErrHelpWanted {
-			usage, err := conf.Usage("SALES", &cfg)
+			usage, err := conf.Usage("SUGAR", &cfg)
 			if err != nil {
 				return errors.Wrap(err, "generating config usage")
 			}

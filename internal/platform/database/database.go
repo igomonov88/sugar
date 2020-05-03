@@ -34,11 +34,11 @@ func Open(cfg Config) (*sqlx.DB, error) {
 
 	// Construct url.
 	url := url.URL{
-		Scheme:   "postgres",
-		User:     url.UserPassword(cfg.User, cfg.Password),
-		Host:     cfg.Host,
-		Path:     cfg.Name,
-		RawQuery: q.Encode(),
+		Scheme: "postgres",
+		User:   url.UserPassword(cfg.User, cfg.Password),
+		Host:   cfg.Host,
+		Path:   cfg.Name,
+		//RawQuery: q.Encode(),
 	}
 
 	return sqlx.Open("postgres", url.String())
