@@ -38,7 +38,7 @@ func Open(cfg Config) (*sqlx.DB, error) {
 		User:   url.UserPassword(cfg.User, cfg.Password),
 		Host:   cfg.Host,
 		Path:   cfg.Name,
-		//RawQuery: q.Encode(),
+		RawQuery: q.Encode(),
 	}
 
 	return sqlx.Open("postgres", url.String())
