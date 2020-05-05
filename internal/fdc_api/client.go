@@ -1,4 +1,4 @@
-package food_data_center_api
+package fdc_api
 
 import (
 	"bytes"
@@ -21,7 +21,7 @@ type Config struct {
 func StatusCheck(ctx context.Context, cfg Config) error {
 	ctx, span := trace.StartSpan(ctx, "platform.Search.StatusCheck")
 	defer span.End()
-	fs := FoodSearchRequest{
+	fs := SearchRequest{
 		SearchInput: "cheese",
 	}
 	b, err := json.Marshal(&fs)

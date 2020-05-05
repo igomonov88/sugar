@@ -34,7 +34,7 @@ services:
 
   # This starts a local PostgreSQL DB.
   db:
-    container_name: sugar_db
+    container_name: sugar-db
     environment:
       - POSTGRES_PASSWORD=postgres
     networks:

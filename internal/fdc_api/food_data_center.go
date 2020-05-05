@@ -1,4 +1,6 @@
-package food_data_center_api
+// Package fdc_api provide the ability to operate with Food Data Central API
+// from U.S. Department Of Agriculture
+package fdc_api
 
 import (
 	"bytes"
@@ -18,25 +20,27 @@ const (
 )
 
 var (
-	// ErrInvalidConfig is used then some of the config values does not specified.
-	ErrInvalidConfig = errors.New("config values does not specified properly")
+	// ErrInvalidConfig is used then some of config values does not specified.
+	ErrInvalidConfig = errors.New("config not specified properly")
 
-	// ErrMethodNotSupported is used when we try to call search with api method which is not supported.
+	// ErrMethodNotSupported is used when we try to call search with api method
+	// which is not supported.
 	ErrMethodNotSupported = errors.New("api method not supported")
 
 	// ErrFailedToComposeUrl is used when we failed to build correct url.
 	ErrFailedToComposeUrl = errors.New("failed to compose url")
 
-	// ErrFromExternalAPI is used when we got not an http 200OK status in response from external api.
+	// ErrFromExternalAPI is used when we got not an http 200OK status in
+	// response from external api.
 	ErrFromExternalAPI = errors.New("error from call to external api")
 )
 
-// Client makes all operations with fatSecret external api.
+// Client makes all operations with food data central external api.
 type Client struct {
 	cfg Config
 }
 
-// Connect knows how to connect to food data center api with provided config.
+// Connect knows how to connect to food data central api with provided config.
 func Connect(cfg Config) (*Client, error) {
 	if cfg.APIURL == "" || cfg.ConsumerKey == "" {
 		return nil, ErrInvalidConfig
@@ -45,12 +49,12 @@ func Connect(cfg Config) (*Client, error) {
 }
 
 // Search is searching for food given the request parameters.
-func Search(ctx context.Context, client *Client, request FoodSearchRequest) (*FoodSearchResponse, error) {
+func Search(ctx context.Context, client *Client, request SearchRequest) (*SearchResponse, error) {
 	ctx, span := trace.StartSpan(ctx, "internal.FoodDataCenter.Search")
 	defer span.End()
 
 	// Compose internal request value.
-	req := FoodSearchInternalRequest{
+	req := SearchInternalRequest{
 		GeneralSearchInput: request.SearchInput,
 	}
 
@@ -67,38 +71,40 @@ func Search(ctx context.Context, client *Client, request FoodSearchRequest) (*Fo
 		case ErrFailedToComposeUrl:
 			return nil, ErrFailedToComposeUrl
 		default:
-			return nil, errors.Wrap(err, "got error while trying to make food search request")
+			return nil, errors.Wrap(err, "error while search request")
 		}
 	}
 
 	// Check response status code. If it's not 200 return error.
 	if resp.StatusCode != http.StatusOK {
-		errResp := FoodDataCenterErrorResponse{}
+		errResp := FoodDataCentralErrorResponse{}
 		err := json.NewDecoder(resp.Body).Decode(&errResp)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to decode error response body.")
+			return nil, errors.Wrap(err, "failed to decode response body.")
 		}
-		return nil, errors.Wrapf(ErrFromExternalAPI, "status code: %v, error: %v, message: %v, path: %v", resp.StatusCode, errResp.Error, errResp.Message, errResp.Path)
+		return nil, errors.Wrapf(
+			ErrFromExternalAPI,
+			"status code: %v, error: %v, message: %v, path: %v",
+			resp.StatusCode, errResp.Error, errResp.Message, errResp.Path)
 	}
 
 	// Compose internal response value.
-	fsi := FoodSearchInternalResponse{}
+	fsi := SearchInternalResponse{}
 	if err := json.NewDecoder(resp.Body).Decode(&fsi); err != nil {
 		return nil, errors.Wrap(err, "failed to decode response from external api")
 	}
 
 	// Compose response value.
-	fs := FoodSearchResponse{}
+	fs := SearchResponse{}
 	for i := 0; i < len(fsi.Foods)-1; i++ {
 		fs.Foods = append(fs.Foods, fsi.Foods[i])
 	}
-	fs.TotalHits = fsi.TotalHits
 
 	return &fs, nil
 }
 
-// FoodDetails knows how to get information about product from external api.
-func FoodDetails(ctx context.Context, client *Client, req FoodDetailsRequest) (*FoodDetailsResponse, error) {
+// Details knows how to get information about product from external api.
+func Details(ctx context.Context, client *Client, req DetailsRequest) (*DetailsResponse, error) {
 	ctx, span := trace.StartSpan(ctx, "internal.FoodDataCenter.Details")
 	defer span.End()
 
@@ -114,26 +120,28 @@ func FoodDetails(ctx context.Context, client *Client, req FoodDetailsRequest) (*
 		case ErrFailedToComposeUrl:
 			return nil, ErrFailedToComposeUrl
 		default:
-			return nil, errors.Wrap(err, "got error while trying to make food details request")
+			return nil, errors.Wrap(err, "got error while details request")
 		}
 	}
 
 	// Check response status code. If it's not 200 return error.
 	if resp.StatusCode != http.StatusOK {
-		errResp := FoodDataCenterErrorResponse{}
+		errResp := FoodDataCentralErrorResponse{}
 		err := json.NewDecoder(resp.Body).Decode(&errResp)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to decode error response body.")
+			return nil, errors.Wrap(err, "failed to decode error body.")
 		}
-		return nil, errors.Wrapf(ErrFromExternalAPI, "status code: %v, error: %v, message: %v, path: %v", resp.StatusCode, errResp.Error, errResp.Message, errResp.Path)
+		return nil, errors.Wrapf(ErrFromExternalAPI,
+			"status code: %v, error: %v, message: %v, path: %v",
+			resp.StatusCode, errResp.Error, errResp.Message, errResp.Path)
 	}
 
-	fdi := FoodDetailsInternalResponse{}
+	fdi := DetailsInternalResponse{}
 	err = json.NewDecoder(resp.Body).Decode(&fdi)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to decode response to food details response")
 	}
-	fd := FoodDetailsResponse{}
+	fd := DetailsResponse{}
 	for i := 0; i < len(fdi.FoodNutrients); i++ {
 		fd.FoodNutrients = append(fd.FoodNutrients, fdi.FoodNutrients[i])
 	}
@@ -144,10 +152,11 @@ func FoodDetails(ctx context.Context, client *Client, req FoodDetailsRequest) (*
 	return &fd, nil
 }
 
-// foodSearch make an external call to food data center with given client and given req parameter to get response.
+// foodSearch make an external call to food data center with given client and
+// given req parameter to get response.
 //
 // If we got an error during the function execution we just pull it upstears.
-func foodSearchHttpRequest(ctx context.Context, c *Client, request FoodSearchInternalRequest) (*http.Response, error) {
+func foodSearchHttpRequest(ctx context.Context, c *Client, request SearchInternalRequest) (*http.Response, error) {
 	ctx, span := trace.StartSpan(ctx, "internal.FoodDataCenter.foodSearchHttpRequest")
 	defer span.End()
 
@@ -186,7 +195,8 @@ func foodSearchHttpRequest(ctx context.Context, c *Client, request FoodSearchInt
 	return resp, nil
 }
 
-// foodDetails make an external call to food data center with given client and fdcID parameter to get response.
+// foodDetails make an external call to food data central with given client and
+// fdcID parameter to get response.
 //
 // If we got an error during the function execution we just pull it upstears.
 func foodDetailsHttpRequest(ctx context.Context, c *Client, fdcID int) (*http.Response, error) {
@@ -218,8 +228,11 @@ func foodDetailsHttpRequest(ctx context.Context, c *Client, fdcID int) (*http.Re
 	return resp, nil
 }
 
-// buildRequestURL knows how to build url for food data center api based on given parameters.
-func buildRequestURL(apiURL string, consumerKey string, searchMethod string, requestParam interface{}) (string, error) {
+// buildRequestURL knows how to build url for food data center api based on
+// given parameters.
+func buildRequestURL(apiURL string, consumerKey string, searchMethod string,
+	requestParam interface{}) (string, error) {
+
 	if apiURL == "" || consumerKey == "" {
 		return "", ErrInvalidConfig
 	}

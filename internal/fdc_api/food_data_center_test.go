@@ -1,4 +1,4 @@
-package food_data_center_api
+package fdc_api
 
 import (
 	"testing"
@@ -32,7 +32,7 @@ func TestFoodDataCenterClient(t *testing.T) {
 
 			t.Log("\tWhen handling the request to Food Data Center.")
 			{
-				req := FoodSearchRequest{
+				req := SearchRequest{
 					SearchInput: "mc donalds cheeseburger",
 				}
 				resp, err := Search(ctx, client, req)
@@ -47,10 +47,10 @@ func TestFoodDataCenterClient(t *testing.T) {
 					}
 					t.Logf("\t%s\tShould be able to get FDCID from response.", success)
 
-					t.Log("\tWhen try to make FoodDetails method call.")
+					t.Log("\tWhen try to make Details method call.")
 					{
-						req := FoodDetailsRequest{FDCID: resp.Foods[0].FDCID}
-						resp, err := FoodDetails(ctx, client, req)
+						req := DetailsRequest{FDCID: resp.Foods[0].FDCID}
+						resp, err := Details(ctx, client, req)
 						if err != nil {
 							t.Fatalf("\t%s\tShould be able make details request to Food Data Center: %s.", failed, err)
 						}

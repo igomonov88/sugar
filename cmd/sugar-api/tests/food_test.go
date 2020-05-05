@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/igomonov88/sugar/cmd/sugar-api/internal/handlers"
-	fdcAPI "github.com/igomonov88/sugar/internal/food_data_center_api"
+	fdcAPI "github.com/igomonov88/sugar/internal/fdc_api"
 	"github.com/igomonov88/sugar/internal/tests"
 )
 
@@ -39,7 +39,7 @@ func TestFoodAPI(t *testing.T) {
 }
 
 func (ft *FoodAPITests) postSearch200(t *testing.T) {
-	body, err := json.Marshal(&fdcAPI.FoodSearchRequest{
+	body, err := json.Marshal(&fdcAPI.SearchRequest{
 		SearchInput: "mars",
 	})
 	if err != nil {
@@ -52,7 +52,7 @@ func (ft *FoodAPITests) postSearch200(t *testing.T) {
 	ft.app.ServeHTTP(w, r)
 
 	// f is the value we will return.
-	var f fdcAPI.FoodSearchResponse
+	var f fdcAPI.SearchResponse
 
 	t.Log("Given the need to search for new food.")
 	{

@@ -8,14 +8,18 @@ import (
 )
 
 // ErrInvalidConfig is used then some of the config values does not specified
-var ErrInvalidConfig = errors.New("config values does not specified properly")
+var ErrInvalidConfig = errors.New("config does not specified properly")
 
 // Config store required properties to use Cache
 type Config struct {
-	// DefaultDuration represents the default value of TimeToLeave parameter of any item in cache. If TTL of the item is
-	// expired we delete the item from the cache. Be
+
+	// DefaultDuration represents the default value of TimeToLeave parameter of
+	// any item in cache. If TTL of the item is
+	// expired we delete the item from the cache.
 	DefaultDuration time.Duration
-	// Size represents max size of the cache,excess of which entails evict of the item from the cache with LRU mechanics
+
+	// Size represents max size of the cache,excess of which entails evict of
+	// the item from the cache with LRU mechanics.
 	Size int
 }
 
@@ -57,8 +61,8 @@ func (c *Cache) Add(key string, value interface{}) {
 	c.lock.Unlock()
 }
 
-// add adds element to list if in this process we going out of the initial cache size we will remove appropriate item
-// from the cache
+// add adds element to list if in this process we going out of the initial cache
+// size we will remove appropriate item from the cache.
 func add(cache *Cache, key string, value interface{}) {
 	if cache.currentSize >= cache.initialSize {
 		remove(cache)
@@ -70,13 +74,19 @@ func add(cache *Cache, key string, value interface{}) {
 		entry.expiresAt = time.Now().Add(cache.defaultDuration)
 		return
 	}
-	element := cache.entryList.PushFront(&entry{key: key, value: value, expiresAt: time.Now().Add(cache.defaultDuration)})
+	element := cache.entryList.PushFront(
+		&entry{
+			key:       key,
+			value:     value,
+			expiresAt: time.Now().Add(cache.defaultDuration)})
 	cache.items[key] = element
 	cache.currentSize++
 }
 
-// Get knows hot to get value from the cache, and if it exists in cache it returns cached value and true as a second
-// parameter to be able to operate with cache in map style. It makes it in concurrent safe way, with using a mutex lock
+// Get knows hot to get value from the cache, and if it exists in cache it
+// returns cached value and true as a second parameter to be able to operate
+// with cache in map style. It makes it in concurrent safe way, with using a
+// mutex lock.
 func (c *Cache) Get(key string) (value interface{}, exist bool) {
 	c.lock.Lock()
 	value, exist = get(c, key)
@@ -84,7 +94,8 @@ func (c *Cache) Get(key string) (value interface{}, exist bool) {
 	return value, exist
 }
 
-// get returns value from the cache if it exists there and appropriate bool value of the exist parameter
+// get returns value from the cache if it exists there and appropriate bool
+// value of the exist parameter.
 func get(cache *Cache, key string) (interface{}, bool) {
 	if element, exist := cache.items[key]; exist {
 		entry := element.Value.(*entry)

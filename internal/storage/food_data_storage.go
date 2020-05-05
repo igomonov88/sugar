@@ -1,4 +1,4 @@
-package food_data_storage
+package storage
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 )
 
 func Search(ctx context.Context, db *sqlx.DB, searchInput string) ([]Food, error) {
-	ctx, span := trace.StartSpan(ctx, "internal.food_data_storage.FoodSearch")
+	ctx, span := trace.StartSpan(ctx, "internal.storage.FoodSearch")
 	defer span.End()
 
 	var foods []Food
@@ -19,15 +19,12 @@ func Search(ctx context.Context, db *sqlx.DB, searchInput string) ([]Food, error
 	);`
 
 	err := db.SelectContext(ctx, &foods, querySelectFood, searchInput)
-	if err != nil {
-		return nil, errors.Wrap(err, "selecting food")
-	}
 
-	return foods, nil
+	return foods, err
 }
 
 func AddFood(ctx context.Context, db *sqlx.DB, nf Food, foodSearchInput string) error {
-	ctx, span := trace.StartSpan(ctx, "internal,food_data_storage.AddFood")
+	ctx, span := trace.StartSpan(ctx, "internal,storage.AddFood")
 	defer span.End()
 
 	const (
@@ -57,13 +54,14 @@ func AddFood(ctx context.Context, db *sqlx.DB, nf Food, foodSearchInput string) 
 }
 
 func GetDetails(ctx context.Context, db *sqlx.DB, fdcID int) (*FoodDetails, error) {
-	ctx, span := trace.StartSpan(ctx, "internal,food_data_storage.GetDetails")
+	ctx, span := trace.StartSpan(ctx, "internal,storage.GetDetails")
 	defer span.End()
 
 	const (
 		queryGetNutrients = `
-		SELECT fn.type, fn.amount, n.number, n.name, n.rank, n.unit_name FROM food_nutrient AS fn 
-			INNER JOIN nutrients AS n ON fn.nutrient_id=n.id WHERE fn.fdc_id=$1`
+		SELECT fn.type, fn.amount, n.number, n.name, n.rank, n.unit_name FROM 
+        food_nutrient AS fn INNER JOIN nutrients AS n ON fn.nutrient_id=n.id 
+        WHERE fn.fdc_id=$1`
 
 		queryGetDescription = `SELECT description from food where fdc_id=$1`
 	)
@@ -83,7 +81,7 @@ func GetDetails(ctx context.Context, db *sqlx.DB, fdcID int) (*FoodDetails, erro
 }
 
 func AddDetails(ctx context.Context, db *sqlx.DB, fdcID int, fd FoodDetails) error {
-	ctx, span := trace.StartSpan(ctx, "internal,food_data_storage.AddDetails")
+	ctx, span := trace.StartSpan(ctx, "internal,storage.AddDetails")
 	defer span.End()
 
 	const (

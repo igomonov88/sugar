@@ -1,4 +1,4 @@
-package food_data_storage
+package storage
 
 // Food represents a information of Food from the search request
 type Food struct {
