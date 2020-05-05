@@ -36,7 +36,8 @@ Service should start even without a DB running yet.
 symbols in profiles: https://github.com/golang/go/issues/23376 / https://github.com/google/pprof/pull/366
 */
 
-// build is the git version of this program. It is set using build flags in the makefile.
+// build is the git version of this program. It is set using build flags in the
+// makefile.
 var build = "develop"
 
 func main() {

@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"database/sql"
 	"net/http"
 
 	"github.com/jmoiron/sqlx"
@@ -20,72 +19,82 @@ func (f *Food) Search(ctx context.Context, w http.ResponseWriter, r *http.Reques
 	ctx, span := trace.StartSpan(ctx, "handlers.Food.Search")
 	defer span.End()
 
-	var sreq api.SearchRequest
-	if err := web.Decode(r, &sreq); err != nil {
+	var req api.SearchRequest
+	if err := web.Decode(r, &req); err != nil {
 		return errors.Wrap(err, "")
 	}
 
-	cachedResp, exist := searchInCache(ctx, f.cache, sreq)
+	// Check searching value in cache, if value exist return it from the cache
+	cachedResp, exist := searchInCache(ctx, f.cache, req)
 	if exist {
 		return web.Respond(ctx, w, cachedResp, http.StatusOK)
 	}
 
 	// Check searching value in storage, if we do not get any result,
 	// we will go to external api for the resources.
-	storageResp, err := searchInStorage(ctx, f.db, sreq.SearchInput)
-	if err != nil {
-		switch err {
-		case sql.ErrNoRows:
-			// If we cant get the food items from database, we will go to external
-			// api for the data.
-			apiResp, err := api.Search(ctx, f.apiClient, sreq)
-			if err != nil {
-				return errors.Wrap(err, "")
-			}
-			go func() {
-				addToCache(ctx, f.cache, sreq.SearchInput, apiResp)
-			}()
-			return web.Respond(ctx, w, apiResp, http.StatusOK)
-		}
-	}
-	if storageResp != nil {
-		return web.Respond(ctx, w, storageResp, http.StatusOK)
-	}
-
-	apiResp, err := api.Search(ctx, f.apiClient, sreq)
+	storageResp, err := searchInStorage(ctx, f.db, req.SearchInput)
 	if err != nil {
 		return errors.Wrap(err, "")
 	}
+
+	// If we get values from storage, we can return it as a response and also
+	// put result into the cache.
+	if len(storageResp.Foods) != 0 {
+		go addToCache(ctx, f.cache, req.SearchInput, storageResp)
+		return web.Respond(ctx, w, storageResp, http.StatusOK)
+	}
+
+	// If we does not have searched values in cache or in database we need to
+	// get information in external api.
+	apiResp, err := api.Search(ctx, f.apiClient, req)
+	if err != nil {
+		return errors.Wrap(err, "")
+	}
+
+	// If we successfully get the result from the external api we add this
+	// result into our cache and storage, and return the result to the client.
+	go addToStorage(ctx, f.db, req.SearchInput, apiResp)
+	go addToCache(ctx, f.cache, req.SearchInput, apiResp)
+
 	return web.Respond(ctx, w, apiResp, http.StatusOK)
 }
 
-// searchInStorage is searching for the given result in storage.
+// searchInStorage is searching for the given result in database, put result to
+// appropriate response structure and return it, or return error.
 func searchInStorage(ctx context.Context, db *sqlx.DB, searchInput string) (*api.SearchResponse, error) {
-	ctx, span := trace.StartSpan(ctx, "handlers.Food.Search.Storage")
+	ctx, span := trace.StartSpan(ctx, "handlers.Food.Search.Storage.Search")
 	defer span.End()
 
 	var sr api.SearchResponse
-	result, err := storage.Search(ctx, db, searchInput)
+	foods, err := storage.Search(ctx, db, searchInput)
 	if err != nil {
 		return nil, err
 	}
-	switch result {
-	case nil:
-		return &sr, sql.ErrNoRows
-	}
 
-	if len(result) != 0 {
-		for i := range result {
+	if len(foods) != 0 {
+		for i := range foods {
 			food := api.Food{
-				FDCID:       result[i].FDCID,
-				Description: result[i].Description,
-				BrandOwner:  result[i].BrandOwner,
+				FDCID:       foods[i].FDCID,
+				Description: foods[i].Description,
+				BrandOwner:  foods[i].BrandOwner,
 			}
 			sr.Foods = append(sr.Foods, food)
 		}
 	}
 
 	return &sr, err
+}
+
+// addToStorage is add value to the storage.
+func addToStorage(ctx context.Context, db *sqlx.DB, searchInput string, resp *api.SearchResponse) {
+	for i := range resp.Foods {
+		f := storage.Food{
+			FDCID:       resp.Foods[i].FDCID,
+			Description: resp.Foods[i].Description,
+			BrandOwner:  resp.Foods[i].BrandOwner,
+		}
+		storage.AddFood(ctx, db, f, searchInput)
+	}
 }
 
 // searchInCache is searching for the item in cache and return value and bool
@@ -95,16 +104,16 @@ func searchInCache(ctx context.Context, cache *cache.Cache, r api.SearchRequest)
 	defer span.End()
 
 	value, exist := cache.Get(r.SearchInput)
-	item, ok := value.(api.SearchResponse)
+	item, ok := value.(*api.SearchResponse)
 	if !ok {
 		return nil, false
 	}
-	return &item, exist
+	return item, exist
 }
 
 // addToCache add value to cache with the given key.
-func addToCache(ctx context.Context, cache *cache.Cache, key string, value *api.SearchResponse) {
+func addToCache(ctx context.Context, cache *cache.Cache, searchInput string, value *api.SearchResponse) {
 	ctx, span := trace.StartSpan(ctx, "handlers.Food.Search.Cache.Add")
 	defer span.End()
-	cache.Add(key, value)
+	cache.Add(searchInput, value)
 }

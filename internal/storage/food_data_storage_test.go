@@ -78,9 +78,10 @@ func TestFoodDataStorage(t *testing.T) {
 				if err != nil {
 					t.Fatalf("\t%s\tShould be able search food in storage: %s", tests.Failed, err)
 				}
-				if len(foods) != 0 {
-					t.Logf("\t%s\tShould be able search food in storage.", tests.Success)
+				if len(foods) == 0 {
+					t.Fatalf("\t%s\tShould be able search food in storage.", tests.Failed)
 				}
+				t.Logf("\t%s\tShould be able search food in storage.", tests.Success)
 			}
 			// Add Food details to storage and check that everything is OK
 			{
@@ -97,7 +98,7 @@ func TestFoodDataStorage(t *testing.T) {
 					t.Fatalf("\t%s\tShould be able to get food details from storage: %s", tests.Failed, err)
 				}
 				if diff := cmp.Diff(food.Description, foodDetails); diff != "" {
-					t.Logf("\t%s\tShould be able to get food details from storage.", tests.Success)
+					t.Logf("%s\tShould be able to get food details from storage.", tests.Success)
 				}
 				for i := 0; i < len(foodDetails.FoodNutrients)-1; i++ {
 					if foodDetails.FoodNutrients[i].Type == fd.FoodNutrients[i].Type {
@@ -115,7 +116,7 @@ func TestFoodDataStorage(t *testing.T) {
 						}
 					}
 				}
-				t.Logf("\t%s\tShould get the same food details from storage.", tests.Success)
+				t.Logf("%s\tShould get the same food details from storage.", tests.Success)
 			}
 		}
 	}

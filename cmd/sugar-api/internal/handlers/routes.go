@@ -25,7 +25,6 @@ type Food struct {
 
 // API constructs an http.Handler with all application routes defined.
 func API(build string, shutdown chan os.Signal, log *log.Logger, db *sqlx.DB, fdcClient *api.Client) http.Handler {
-
 	// Construct the web.App which holds all routes as well as common Middleware.
 	app := web.NewApp(shutdown, mid.Logger(log), mid.Errors(log), mid.Metrics(), mid.Panics(log))
 
@@ -42,15 +41,14 @@ func API(build string, shutdown chan os.Signal, log *log.Logger, db *sqlx.DB, fd
 	}
 
 	c, _ := cache.New(cacheConfig)
-
-	app.Handle("GET", "/v1/health", check.Health)
-
 	// Register food endpoints.
 	f := Food{
 		apiClient: fdcClient,
 		cache:     c,
 		db:        db,
 	}
+
+	app.Handle("GET", "/v1/health", check.Health)
 	app.Handle("POST", "/v1/search", f.Search)
 	app.Handle("POST", "/v1/details", f.Details)
 

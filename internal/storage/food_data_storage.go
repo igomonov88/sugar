@@ -9,10 +9,10 @@ import (
 )
 
 func Search(ctx context.Context, db *sqlx.DB, searchInput string) ([]Food, error) {
-	ctx, span := trace.StartSpan(ctx, "internal.storage.FoodSearch")
+	ctx, span := trace.StartSpan(ctx, "internal.storage.Search")
 	defer span.End()
 
-	var foods []Food
+	foods := []Food{}
 	const querySelectFood = `
 	SELECT * FROM food WHERE EXISTS (
 		SELECT fdc_id FROM search_food WHERE search_input LIKE '%' || $1 || '%'
@@ -36,13 +36,14 @@ func AddFood(ctx context.Context, db *sqlx.DB, nf Food, foodSearchInput string) 
 	if err != nil {
 		return errors.Wrap(err, "begin transaction")
 	}
-	_, err = tx.ExecContext(ctx, queryAddFood, &nf.FDCID, &nf.Description, &nf.BrandOwner)
+
+	_, err = tx.Exec(queryAddFood, nf.FDCID, nf.Description, nf.BrandOwner)
 	if err != nil {
 		// TODO: handle rollback error
 		tx.Rollback()
 		return errors.Wrap(err, "inserting food to food")
 	}
-	_, err = tx.ExecContext(ctx, queryAddFoodSearch, foodSearchInput, &nf.FDCID)
+	_, err = tx.Exec(queryAddFoodSearch, foodSearchInput, nf.FDCID)
 	if err != nil {
 		// TODO: handle rollback error
 		tx.Rollback()
@@ -66,14 +67,16 @@ func GetDetails(ctx context.Context, db *sqlx.DB, fdcID int) (*FoodDetails, erro
 		queryGetDescription = `SELECT description from food where fdc_id=$1`
 	)
 
-	var fn []FoodNutrient
+	fn := []FoodNutrient{}
 	var description string
 
-	if err := db.SelectContext(ctx, &fn, queryGetNutrients, fdcID); err != nil {
+	err := db.SelectContext(ctx, &fn, queryGetNutrients, fdcID)
+	if err != nil {
 		return nil, errors.Wrap(err, "selecting from food_nutrients")
 	}
 
-	if err := db.GetContext(ctx, &description, queryGetDescription, fdcID); err != nil {
+	err = db.GetContext(ctx, &description, queryGetDescription, fdcID)
+	if err != nil {
 		return nil, errors.Wrap(err, "selecting from food")
 	}
 
@@ -95,17 +98,20 @@ func AddDetails(ctx context.Context, db *sqlx.DB, fdcID int, fd FoodDetails) err
 		return errors.Wrap(err, "begin transaction")
 	}
 
-	_, err = tx.ExecContext(ctx, queryAddFood, fdcID, fd.Description)
+	_, err = tx.Exec(queryAddFood, fdcID, fd.Description)
 	if err != nil {
 		// TODO: handle rollback error
 		tx.Rollback()
 		return errors.Wrap(err, "inserting food")
 	}
 
-	for i := 0; i <= len(fd.FoodNutrients)-1; i++ {
+	for i := range fd.FoodNutrients {
 		var nID int
-		row := tx.QueryRowContext(ctx, queryAddNutrients,
-			fd.FoodNutrients[i].Name, fd.FoodNutrients[i].Rank, fd.FoodNutrients[i].UnitName, fd.FoodNutrients[i].Number)
+		row := tx.QueryRow(queryAddNutrients, fd.FoodNutrients[i].Name,
+			fd.FoodNutrients[i].Rank,
+			fd.FoodNutrients[i].UnitName,
+			fd.FoodNutrients[i].Number,
+		)
 		if err != nil {
 			// TODO: handle rollback error
 			tx.Rollback()
@@ -118,7 +124,8 @@ func AddDetails(ctx context.Context, db *sqlx.DB, fdcID int, fd FoodDetails) err
 			return errors.Wrap(err, "scanning nutrientID")
 		}
 
-		_, err = tx.ExecContext(ctx, queryAddFoodNutrients, fd.FoodNutrients[i].Type, fd.FoodNutrients[i].Amount, nID, fdcID)
+		_, err = tx.Exec(queryAddFoodNutrients, fd.FoodNutrients[i].Type,
+			fd.FoodNutrients[i].Amount, nID, fdcID)
 		if err != nil {
 			// TODO: handle rollback error
 			tx.Rollback()
