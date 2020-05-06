@@ -50,18 +50,18 @@ func storageAddDetails(ctx context.Context, db *sqlx.DB, fdcID int, details *api
 	foodDetails.Description = details.Description
 
 	for i := range details.FoodNutrients {
-			n := storage.Nutrient{
-				Name:     details.FoodNutrients[i].Nutrient.Name,
-				Rank:     details.FoodNutrients[i].Nutrient.Rank,
-				UnitName: details.FoodNutrients[i].Nutrient.UnitName,
-			}
-			fn := storage.FoodNutrient{
-				Type:     details.FoodNutrients[i].Type,
-				Amount:   details.FoodNutrients[i].Amount,
-				Nutrient: n,
-			}
-			foodDetails.FoodNutrients = append(foodDetails.FoodNutrients, fn)
-			storage.AddDetails(ctx, db, fdcID, foodDetails)
+		n := storage.Nutrient{
+			Name:     details.FoodNutrients[i].Nutrient.Name,
+			Rank:     details.FoodNutrients[i].Nutrient.Rank,
+			UnitName: details.FoodNutrients[i].Nutrient.UnitName,
+		}
+		fn := storage.FoodNutrient{
+			Type:     details.FoodNutrients[i].Type,
+			Amount:   details.FoodNutrients[i].Amount,
+			Nutrient: n,
+		}
+		foodDetails.FoodNutrients = append(foodDetails.FoodNutrients, fn)
+		storage.AddDetails(ctx, db, fdcID, foodDetails)
 	}
 }
 

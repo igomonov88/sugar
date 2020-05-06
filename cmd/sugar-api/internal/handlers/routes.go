@@ -4,7 +4,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/jmoiron/sqlx"
 
@@ -24,7 +23,7 @@ type Food struct {
 }
 
 // API constructs an http.Handler with all application routes defined.
-func API(build string, shutdown chan os.Signal, log *log.Logger, db *sqlx.DB, fdcClient *api.Client) http.Handler {
+func API(build string, shutdown chan os.Signal, log *log.Logger, db *sqlx.DB, fdcClient *api.Client, c *cache.Cache) http.Handler {
 	// Construct the web.App which holds all routes as well as common Middleware.
 	app := web.NewApp(shutdown, mid.Logger(log), mid.Errors(log), mid.Metrics(), mid.Panics(log))
 
@@ -34,13 +33,6 @@ func API(build string, shutdown chan os.Signal, log *log.Logger, db *sqlx.DB, fd
 		db:    db,
 	}
 
-	// Construct cache configuration
-	cacheConfig := cache.Config{
-		DefaultDuration: 24 * time.Hour,
-		Size:            1000,
-	}
-
-	c, _ := cache.New(cacheConfig)
 	// Register food endpoints.
 	f := Food{
 		apiClient: fdcClient,

@@ -20,6 +20,7 @@ import (
 
 	"github.com/igomonov88/sugar/cmd/sugar-api/internal/handlers"
 	apiClient "github.com/igomonov88/sugar/internal/fdc_api"
+	"github.com/igomonov88/sugar/internal/platform/cache"
 	"github.com/igomonov88/sugar/internal/platform/database"
 )
 
@@ -85,6 +86,9 @@ func run() error {
 			ConsumerKey string `conf:"default:07qblbARRNts5zU45YOPyC8NDQc1iuHQgTqLwbTL"`
 			APIURL      string `conf:"default:https://api.nal.usda.gov/fdc/v1/"`
 		}
+		Cache struct {
+			Size     int `conf:"default:100"`
+		}
 	}
 
 	if err := conf.Parse(os.Args[1:], "SUGAR", &cfg); err != nil {
@@ -114,6 +118,19 @@ func run() error {
 	log.Printf("main : Config :\n%v\n", out)
 
 	//TODO add AUTHENTICATION
+
+	// =========================================================================
+	// Start Cache
+	log.Println("main : Started : Initializing cache support")
+	cacheCfg := cache.Config{
+		DefaultDuration: 24 * time.Hour,
+		Size:            cfg.Cache.Size,
+	}
+	c, err := cache.New(cacheCfg)
+
+	if err != nil {
+		return errors.Wrap(err, "initializing cache")
+	}
 
 	// =========================================================================
 	// Start Database
@@ -194,7 +211,7 @@ func run() error {
 	}
 	api := http.Server{
 		Addr:         cfg.Web.APIHost,
-		Handler:      handlers.API(build, shutdown, log, db, fdcClient),
+		Handler:      handlers.API(build, shutdown, log, db, fdcClient, c),
 		ReadTimeout:  cfg.Web.ReadTimeout,
 		WriteTimeout: cfg.Web.WriteTimeout,
 	}
