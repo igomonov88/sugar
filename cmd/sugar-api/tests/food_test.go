@@ -10,6 +10,7 @@ import (
 
 	"github.com/igomonov88/sugar/cmd/sugar-api/internal/handlers"
 	fdcAPI "github.com/igomonov88/sugar/internal/fdc_api"
+	"github.com/igomonov88/sugar/internal/platform/cache"
 	"github.com/igomonov88/sugar/internal/tests"
 )
 
@@ -30,8 +31,16 @@ func TestFoodAPI(t *testing.T) {
 	if err != nil {
 		t.Fatalf("\t%s\tShould be able to connect to Food Data Center api", tests.Failed)
 	}
+	cacheCfg := cache.Config{
+		DefaultDuration: 0,
+		Size:            10,
+	}
+	cacheClient, err := cache.New(cacheCfg)
+	if err != nil {
+		t.Fatalf("\t%s\tShould be able to create cache instance", tests.Failed)
+	}
 	tests := FoodAPITests{
-		app: handlers.API("develop", shutdown, test.Log, test.DB, fdcClient),
+		app: handlers.API("develop", shutdown, test.Log, test.DB, fdcClient, cacheClient),
 	}
 
 	t.Run("postSearch200", tests.postSearch200)
