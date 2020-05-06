@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/igomonov88/sugar/cmd/sugar-api/internal/handlers"
 	fdcAPI "github.com/igomonov88/sugar/internal/fdc_api"
@@ -32,7 +33,7 @@ func TestFoodAPI(t *testing.T) {
 		t.Fatalf("\t%s\tShould be able to connect to Food Data Center api", tests.Failed)
 	}
 	cacheCfg := cache.Config{
-		DefaultDuration: 0,
+		DefaultDuration: 1 *time.Millisecond,
 		Size:            10,
 	}
 	cacheClient, err := cache.New(cacheCfg)
