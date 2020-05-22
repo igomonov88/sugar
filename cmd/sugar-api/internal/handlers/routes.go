@@ -7,7 +7,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 
-	api "github.com/igomonov88/sugar/internal/fdc_api"
+	api "github.com/igomonov88/sugar/internal/fdc"
 	"github.com/igomonov88/sugar/internal/mid"
 	"github.com/igomonov88/sugar/internal/platform/auth"
 	"github.com/igomonov88/sugar/internal/platform/cache"
@@ -41,7 +41,7 @@ func API(build string, shutdown chan os.Signal, log *log.Logger, db *sqlx.DB, fd
 	}
 
 	app.Handle("GET", "/v1/health", check.Health)
-	app.Handle("POST", "/v1/search", f.Search)
+	app.Handle("GET", "/v1/search", f.Search)
 	app.Handle("POST", "/v1/details", f.Details)
 
 	return app

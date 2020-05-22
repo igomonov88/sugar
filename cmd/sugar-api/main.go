@@ -19,7 +19,7 @@ import (
 	"go.opencensus.io/trace"
 
 	"github.com/igomonov88/sugar/cmd/sugar-api/internal/handlers"
-	apiClient "github.com/igomonov88/sugar/internal/fdc_api"
+	apiClient "github.com/igomonov88/sugar/internal/fdc"
 	"github.com/igomonov88/sugar/internal/platform/cache"
 	"github.com/igomonov88/sugar/internal/platform/database"
 )

@@ -1,7 +1,6 @@
 package tests
 
 import (
-	"bytes"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -10,7 +9,7 @@ import (
 	"time"
 
 	"github.com/igomonov88/sugar/cmd/sugar-api/internal/handlers"
-	fdcAPI "github.com/igomonov88/sugar/internal/fdc_api"
+	fdcAPI "github.com/igomonov88/sugar/internal/fdc"
 	"github.com/igomonov88/sugar/internal/platform/cache"
 	"github.com/igomonov88/sugar/internal/tests"
 )
@@ -33,7 +32,7 @@ func TestFoodAPI(t *testing.T) {
 		t.Fatalf("\t%s\tShould be able to connect to Food Data Center api", tests.Failed)
 	}
 	cacheCfg := cache.Config{
-		DefaultDuration: 1 *time.Millisecond,
+		DefaultDuration: 1 * time.Millisecond,
 		Size:            10,
 	}
 	cacheClient, err := cache.New(cacheCfg)
@@ -49,14 +48,7 @@ func TestFoodAPI(t *testing.T) {
 }
 
 func (ft *FoodAPITests) postSearch200(t *testing.T) {
-	body, err := json.Marshal(&fdcAPI.SearchRequest{
-		SearchInput: "mars",
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	r := httptest.NewRequest("POST", "/v1/search", bytes.NewBuffer(body))
+	r := httptest.NewRequest("GET", "/v1/search?product=mars",nil)
 	w := httptest.NewRecorder()
 
 	ft.app.ServeHTTP(w, r)

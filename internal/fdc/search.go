@@ -1,6 +1,7 @@
 package fdc
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"net/http"
@@ -10,22 +11,17 @@ import (
 	"go.opencensus.io/trace"
 )
 
-// Search is searching for food given the request parameters.
-func Search(ctx context.Context, client *Client, search string) (*SearchResponse, error) {
+// SearchOutput is returning food with given request parameters.
+func SearchOutput(ctx context.Context, client *Client, search string) (*SearchResponse, error) {
 	ctx, span := trace.StartSpan(ctx, "internal.FoodDataCenter.Search")
 	defer span.End()
 
-	// Compose internal request value.
-	req := SearchInternalRequest{
-		GeneralSearchInput: request.SearchInput,
-	}
-
-	// Create a context with a timeout of 120 seconds.
-	ctx, cancel := context.WithTimeout(ctx, 120*time.Second)
+	// Create a context with a timeout of 10 seconds.
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
 	// Make http call to external api.
-	resp, err := foodSearchHTTPRequest(ctx, client, req)
+	resp, err := foodSearchHTTPRequest(ctx, client, search)
 	if err != nil {
 		switch err {
 		case ErrInvalidConfig:
@@ -65,25 +61,42 @@ func Search(ctx context.Context, client *Client, search string) (*SearchResponse
 	return &fs, nil
 }
 
-// foodDetails make an external call to food data central with given client and
-// fdcID parameter to get response.
+
+// foodSearchHTTPRequest make an external call to food data center with given client and
+// given req parameter to get response.
 //
 // If we got an error during the function execution we just pull it upstears.
-func foodDetailsHTTPRequest(ctx context.Context, c *Client, fdcID int) (*http.Response, error) {
-	ctx, span := trace.StartSpan(ctx, "internal.FoodDataCenter.foodDetailsHttpRequest")
+func foodSearchHTTPRequest(ctx context.Context, c *Client, search string) (*http.Response, error) {
+	ctx, span := trace.StartSpan(ctx, "internal.FoodDataCenter.foodSearchHttpRequest")
 	defer span.End()
 
 	// Create request url with given client parameters.
-	url, err := buildRequestURL(c.cfg.APIURL, c.cfg.ConsumerKey, foodDetailMethod, fdcID)
+	url, err := buildRequestURL(c.cfg.APIURL, c.cfg.ConsumerKey, foodSearchMethod, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	// Create a new request.
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	request := SearchInternalRequest{
+			GeneralSearchInput: search,
+		}
+	// Marshall incoming request to json.
+	b, err := json.Marshal(&request)
+	if err != nil {
+		return nil, errors.Wrapf(err, "request value %v", request)
+	}
+
+	// Creating new http request.
+	buf := bytes.NewBuffer(b)
+	req, err := http.NewRequest(http.MethodPost, url, buf)
 	if err != nil {
 		return nil, errors.Wrapf(err, "request url: %s", url)
 	}
+
+	// Bind the new context into the request.
+	req = req.WithContext(ctx)
+
+	// Set appropriate Content-Type to request
+	req.Header.Add("Content-Type", "application/json")
 
 	// Make the web call and return any error. Do will handle the
 	// context level timeout.

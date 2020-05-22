@@ -8,7 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"go.opencensus.io/trace"
 
-	api "github.com/igomonov88/sugar/internal/fdc_api"
+	api "github.com/igomonov88/sugar/internal/fdc"
 	"github.com/igomonov88/sugar/internal/platform/web"
 	storage "github.com/igomonov88/sugar/internal/storage"
 )
@@ -46,7 +46,7 @@ func storageAddDetails(ctx context.Context, db *sqlx.DB, fdcID int, details *api
 	ctx, span := trace.StartSpan(ctx, "handlers.Food.Details.Storage.")
 	defer span.End()
 
-	var foodDetails storage.FoodDetails
+	var foodDetails storage.Details
 	foodDetails.Description = details.Description
 
 	for i := range details.FoodNutrients {
@@ -60,8 +60,8 @@ func storageAddDetails(ctx context.Context, db *sqlx.DB, fdcID int, details *api
 			Amount:   details.FoodNutrients[i].Amount,
 			Nutrient: n,
 		}
-		foodDetails.FoodNutrients = append(foodDetails.FoodNutrients, fn)
-		storage.AddDetails(ctx, db, fdcID, foodDetails)
+		foodDetails.Nutrients = append(foodDetails.Nutrients, fn)
+		storage.SaveDetails(ctx, db, fdcID, foodDetails)
 	}
 }
 
@@ -73,23 +73,23 @@ func storageGetDetails(ctx context.Context, db *sqlx.DB, fdcID int) (*api.Detail
 
 	var resp api.DetailsResponse
 
-	details, err := storage.GetDetails(ctx, db, fdcID)
+	details, err := storage.RetrieveDetails(ctx, db, fdcID)
 	if err != nil {
 		return nil, err
 	}
 	resp.Description = details.Description
 
-	for i := range details.FoodNutrients {
+	for i := range details.Nutrients {
 		n := api.Nutrient{
-			Name:     details.FoodNutrients[i].Name,
-			Rank:     details.FoodNutrients[i].Rank,
-			UnitName: details.FoodNutrients[i].UnitName,
+			Name:     details.Nutrients[i].Name,
+			Rank:     details.Nutrients[i].Rank,
+			UnitName: details.Nutrients[i].UnitName,
 		}
 		fn := api.FoodNutrient{
-			Type:     details.FoodNutrients[i].Type,
-			ID:       details.FoodNutrients[i].ID,
+			Type:     details.Nutrients[i].Type,
+			ID:       details.Nutrients[i].ID,
 			Nutrient: n,
-			Amount:   details.FoodNutrients[i].Amount,
+			Amount:   details.Nutrients[i].Amount,
 		}
 		resp.FoodNutrients = append(resp.FoodNutrients, fn)
 	}

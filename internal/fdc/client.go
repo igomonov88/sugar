@@ -1,4 +1,4 @@
-package fdc_api
+package fdc
 
 import (
 	"bytes"

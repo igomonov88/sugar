@@ -1,4 +1,4 @@
-package fdc_api
+package fdc
 
 // SearchRequest represents a request query to our api
 type SearchRequest struct {
