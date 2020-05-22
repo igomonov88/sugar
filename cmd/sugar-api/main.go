@@ -87,7 +87,7 @@ func run() error {
 			APIURL      string `conf:"default:https://api.nal.usda.gov/fdc/v1/"`
 		}
 		Cache struct {
-			Size     int `conf:"default:100"`
+			Size int `conf:"default:100"`
 		}
 	}
 
