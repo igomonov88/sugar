@@ -12,7 +12,7 @@ import (
 )
 
 // SearchOutput is returning food with given request parameters.
-func SearchOutput(ctx context.Context, client *Client, search string) (*SearchResponse, error) {
+func SearchOutput(ctx context.Context, client *Client, search string) (*SearchInternalResponse, error) {
 	ctx, span := trace.StartSpan(ctx, "internal.FoodDataCenter.Search")
 	defer span.End()
 
@@ -52,15 +52,8 @@ func SearchOutput(ctx context.Context, client *Client, search string) (*SearchRe
 		return nil, errors.Wrap(err, "failed to decode response from external api")
 	}
 
-	// Compose response value.
-	fs := SearchResponse{}
-	for i := 0; i < len(fsi.Foods)-1; i++ {
-		fs.Foods = append(fs.Foods, fsi.Foods[i])
-	}
-
-	return &fs, nil
+	return &fsi, nil
 }
-
 
 // foodSearchHTTPRequest make an external call to food data center with given client and
 // given req parameter to get response.
@@ -71,21 +64,21 @@ func foodSearchHTTPRequest(ctx context.Context, c *Client, search string) (*http
 	defer span.End()
 
 	// Create request url with given client parameters.
-	url, err := buildRequestURL(c.cfg.APIURL, c.cfg.ConsumerKey, foodSearchMethod, nil)
+	url, err := buildRequestURL(c.cfg.APIURL, c.cfg.ConsumerKey, foodSearchMethod, search)
 	if err != nil {
 		return nil, err
 	}
 
 	request := SearchInternalRequest{
-			GeneralSearchInput: search,
-		}
+		GeneralSearchInput: search,
+	}
 	// Marshall incoming request to json.
 	b, err := json.Marshal(&request)
 	if err != nil {
 		return nil, errors.Wrapf(err, "request value %v", request)
 	}
 
-	// Creating new http request.
+	//// Creating new http request.
 	buf := bytes.NewBuffer(b)
 	req, err := http.NewRequest(http.MethodPost, url, buf)
 	if err != nil {

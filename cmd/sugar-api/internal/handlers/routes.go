@@ -42,7 +42,7 @@ func API(build string, shutdown chan os.Signal, log *log.Logger, db *sqlx.DB, fd
 
 	app.Handle("GET", "/v1/health", check.Health)
 	app.Handle("GET", "/v1/search/:product", f.Search)
-	app.Handle("POST", "/v1/details", f.Details)
+	app.Handle("GET", "/v1/details/:fdcID", f.Details)
 
 	return app
 }

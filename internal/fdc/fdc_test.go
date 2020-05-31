@@ -43,11 +43,10 @@ func TestFoodDataCenterClient(t *testing.T) {
 						t.Skipf("\tResponse result is zero, please try to use another example of product in method above.")
 					}
 					t.Logf("\t%s\tShould be able to get FDCID from response.", success)
-
 					t.Log("\tWhen try to make Details method call.")
 					{
-						req := DetailsRequest{FDCID: resp.Foods[0].FDCID}
-						resp, err := Details(ctx, client, req)
+						fdcID := resp.Foods[0].FDCID
+						resp, err := Details(ctx, client, fdcID)
 						if err != nil {
 							t.Fatalf("\t%s\tShould be able make details request to Food Data Center: %s.", failed, err)
 						}

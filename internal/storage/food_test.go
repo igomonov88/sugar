@@ -28,10 +28,10 @@ func TestFoodDataStorage(t *testing.T) {
 				UnitName: "Protein",
 			}
 			n2 := storage.Nutrient{
-				Name:     "Carbs",
+				Name:     "Carbohydrates",
 				Rank:     206,
 				Number:   206,
-				UnitName: "Carbs",
+				UnitName: "g",
 			}
 			n3 := storage.Nutrient{
 				Name:     "Fat",
@@ -58,10 +58,6 @@ func TestFoodDataStorage(t *testing.T) {
 			fns = append(fns, fn1)
 			fns = append(fns, fn2)
 			fns = append(fns, fn3)
-			fd := storage.Details{
-				Description: food.Description,
-				Nutrients:   fns,
-			}
 
 			// Add Food Item to storage and check that everything is OK
 			{
@@ -71,6 +67,7 @@ func TestFoodDataStorage(t *testing.T) {
 				}
 				t.Logf("\t%s\tShould be able to add food to storage.", tests.Success)
 			}
+
 			// Search for Food item in storage and check that everything is OK
 			{
 				foods, err := storage.List(ctx, db, food.Description)
@@ -82,14 +79,16 @@ func TestFoodDataStorage(t *testing.T) {
 				}
 				t.Logf("\t%s\tShould be able search food in storage.", tests.Success)
 			}
+
 			// Add Food details to storage and check that everything is OK
 			{
-				err := storage.SaveDetails(ctx, db, food.FDCID, fd)
+				err := storage.SaveDetails(ctx, db, food.FDCID, 100.0, "g")
 				if err != nil {
 					t.Fatalf("\t%s\tShould be able to add food details to storage: %s", tests.Failed, err)
 				}
 				t.Logf("\t%s\tShould be able to add food details to storage.", tests.Success)
 			}
+
 			// Get Food details from storage, compare then and check that everything is correct
 			{
 				foodDetails, err := storage.RetrieveDetails(ctx, db, 1234)
@@ -99,23 +98,21 @@ func TestFoodDataStorage(t *testing.T) {
 				if diff := cmp.Diff(food.Description, foodDetails); diff != "" {
 					t.Logf("%s\tShould be able to get food details from storage.", tests.Success)
 				}
-				for i := 0; i < len(foodDetails.Nutrients)-1; i++ {
-					if foodDetails.Nutrients[i].Type == fd.Nutrients[i].Type {
-						if !cmp.Equal(foodDetails.Nutrients[i].Number, fd.Nutrients[i].Number) {
-							t.Fatalf("\t%s\tShould get the same food details from storage: %s", tests.Failed, err)
-						}
-						if !cmp.Equal(foodDetails.Nutrients[i].Amount, fd.Nutrients[i].Amount) {
-							t.Fatalf("\t%s\tShould get the same food details from storage: %s", tests.Failed, err)
-						}
-						if !cmp.Equal(foodDetails.Nutrients[i].Rank, fd.Nutrients[i].Rank) {
-							t.Fatalf("\t%s\tShould get the same food details from storage: %s", tests.Failed, err)
-						}
-						if !cmp.Equal(foodDetails.Nutrients[i].UnitName, fd.Nutrients[i].UnitName) {
-							t.Fatalf("\t%s\tShould get the same food details from storage: %s", tests.Failed, err)
-						}
-					}
+
+				if diff := cmp.Diff(foodDetails.FDCID, 1234); diff != "" {
+					t.Logf("%s\tShould be able to get the same food details from storage.", tests.Failed)
 				}
-				t.Logf("%s\tShould get the same food details from storage.", tests.Success)
+
+				if diff := cmp.Diff(foodDetails.Amount, 100.0); diff != "" {
+					t.Logf("%s\tShould be able to get the same food details from storage.", tests.Failed)
+				}
+
+				if diff := cmp.Diff(foodDetails.UnitName, "g"); diff != "" {
+					t.Logf("%s\tShould be able to get the same food details from storage.", tests.Failed)
+				}
+
+				t.Logf("%s\tShould be able to get the same food details from storage.", tests.Success)
+
 			}
 		}
 	}

@@ -34,15 +34,17 @@ var (
 )
 
 // Details knows how to get information about product from external api.
-func Details(ctx context.Context, client *Client, req DetailsRequest) (*DetailsResponse, error) {
+func Details(ctx context.Context, client *Client, fdcID int) (*DetailsResponse, error) {
 	ctx, span := trace.StartSpan(ctx, "internal.FoodDataCenter.Details")
 	defer span.End()
 
 	// Create a context with a timeout of 120 seconds.
-	ctx, cancel := context.WithTimeout(ctx, 120*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
-	resp, err := foodDetailsHTTPRequest(ctx, client, req.FDCID)
+	var fdi DetailsInternalResponse
+
+	resp, err := foodDetailsHTTPRequest(ctx, client, fdcID)
 	if err != nil {
 		switch err {
 		case ErrInvalidConfig:
@@ -66,18 +68,24 @@ func Details(ctx context.Context, client *Client, req DetailsRequest) (*DetailsR
 			resp.StatusCode, errResp.Error, errResp.Message, errResp.Path)
 	}
 
-	fdi := DetailsInternalResponse{}
 	err = json.NewDecoder(resp.Body).Decode(&fdi)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to decode response to food details response")
 	}
-	fd := DetailsResponse{}
-	for i := 0; i < len(fdi.FoodNutrients); i++ {
-		fd.FoodNutrients = append(fd.FoodNutrients, fdi.FoodNutrients[i])
+
+	fd := DetailsResponse{
+		FoodNutrients: make([]FoodNutrient, len(fdi.FoodNutrients)),
+		FoodPortions:  make([]FoodPortion, len(fdi.FoodPortions)),
 	}
-	for i := 0; i < len(fdi.FoodPortions); i++ {
-		fd.FoodPortions = append(fd.FoodPortions, fdi.FoodPortions[i])
+
+	for i := range fdi.FoodNutrients {
+		fd.FoodNutrients[i] = fdi.FoodNutrients[i]
 	}
+
+	for i := range fdi.FoodPortions {
+		fd.FoodPortions[i] = fdi.FoodPortions[i]
+	}
+
 	fd.Description = fdi.Description
 	return &fd, nil
 }

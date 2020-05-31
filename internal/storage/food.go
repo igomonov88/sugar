@@ -16,9 +16,8 @@ func List(ctx context.Context, db *sqlx.DB, searchInput string) ([]Food, error) 
 	var foods []Food
 
 	const selectFood = `
-	SELECT * FROM food WHERE EXISTS (
-		SELECT fdc_id FROM search_food WHERE search_input LIKE '%' || $1 || '%'
-	);`
+	SELECT * FROM food WHERE fdc_id IN (
+	    SELECT fdc_id FROM search_food WHERE search_input LIKE '%' || $1 ||'%');`
 
 	err := db.SelectContext(ctx, &foods, selectFood, searchInput)
 
@@ -61,91 +60,56 @@ func SaveSearchInput(ctx context.Context, db *sqlx.DB, food Food, input string) 
 }
 
 // RetrieveDetails returns Details and error if we got it.
-func RetrieveDetails(ctx context.Context, db *sqlx.DB, fdcID int) (*Details, error) {
-	ctx, span := trace.StartSpan(ctx, "internal,storage.GetDetails")
+func RetrieveDetails(ctx context.Context, db *sqlx.DB, fdcID int) (*DetailsRef, error) {
+	ctx, span := trace.StartSpan(ctx, "internal.storage.RetrieveDetailsRef")
 	defer span.End()
 
-	var nutrients []FoodNutrient
-	var description string
-
 	const (
-		getNutrients = `
-		SELECT fn.type, fn.amount, n.number, n.name, n.rank, n.unit_name FROM 
-        food_nutrient AS fn INNER JOIN nutrients AS n ON fn.nutrient_id=n.id 
-        WHERE fn.fdc_id=$1`
-
-		getDescription = `SELECT description from food where fdc_id=$1`
+		query = `
+		SELECT f.description, c.amount, c.unit_name FROM food AS f 
+		INNER JOIN carbohydrates AS c ON f.fdc_id = c.fdc_id and c.fdc_id = $1 
+		FOR UPDATE;`
 	)
 
-	err := db.SelectContext(ctx, &nutrients, getNutrients, fdcID)
+	var details DetailsRef
+
+	err := db.GetContext(ctx, &details, query, fdcID)
 	if err != nil {
-		return nil, errors.Wrap(err, "selecting from food_nutrients")
+		return nil, err
 	}
 
-	err = db.GetContext(ctx, &description, getDescription, fdcID)
-	if err != nil {
-		return nil, errors.Wrap(err, "selecting from food")
-	}
-
-	return &Details{Description: description, Nutrients: nutrients}, nil
+	return &details, nil
 }
 
-// SaveDetails save providede details to database.
-func SaveDetails(ctx context.Context, db *sqlx.DB, fdcID int, details Details) error {
-	ctx, span := trace.StartSpan(ctx, "internal,storage.AddDetails")
+// SaveCarbohydrates saving carbohydrates to database
+func SaveCarbohydrates(ctx context.Context, db *sqlx.DB, fdcID int, amount float64, units string) error {
+	ctx, span := trace.StartSpan(ctx, "internal.storage.SaveCarbohydrates")
+	defer span.End()
+
+	const query = `
+		INSERT INTO carbohydrates (fdc_id, amount, units) VALUES ($1, $2, $3)`
+
+	_, err := db.ExecContext(ctx, query, fdcID, amount, units)
+	if err != nil {
+		return errors.Wrap(err, "inserting carbohydrates")
+	}
+
+	return nil
+}
+
+// SaveDetails save provided details to database.
+func SaveDetails(ctx context.Context, db *sqlx.DB, fdcID int, amount float64, units string) error {
+	ctx, span := trace.StartSpan(ctx, "internal.storage.SaveDetails")
 	defer span.End()
 
 	const (
-		addFood = `INSERT INTO food 
-		(fdc_id, description) VALUES ($1, $2) ON CONFLICT DO NOTHING;`
-
-		addNutrients = `INSERT INTO nutrients 
-		(name, rank, unit_name, number) VALUES ($1, $2, $3, $4) RETURNING id;`
-
-		addFoodNutrients = `INSERT INTO food_nutrient 
-		(type, amount, nutrient_id, fdc_id) VALUES ($1,$2,$3,$4);`
+		addCarbs = `INSERT INTO carbohydrates (fdc_id, amount, unit_name) 
+		VALUES ($1, $2, $3) ON CONFLICT DO NOTHING;`
 	)
 
-	tx, err := db.Begin()
-	if err != nil {
-		return errors.Wrap(err, "begin transaction")
+	if _, err := db.Exec(addCarbs, fdcID, amount, units); err != nil {
+		return errors.Wrap(err, "inserting carbohydrates")
 	}
 
-	_, err = tx.Exec(addFood, fdcID, details.Description)
-	if err != nil {
-		// TODO: handle rollback error
-		tx.Rollback()
-		return errors.Wrap(err, "inserting food")
-	}
-
-	for i := range details.Nutrients {
-		var nID int
-		row := tx.QueryRow(addNutrients, details.Nutrients[i].Name,
-			details.Nutrients[i].Rank,
-			details.Nutrients[i].UnitName,
-			details.Nutrients[i].Number,
-		)
-		if err != nil {
-			// TODO: handle rollback error
-			tx.Rollback()
-			return errors.Wrap(err, "inserting nutrients")
-		}
-
-		if err := row.Scan(&nID); err != nil {
-			// TODO: handle rollback error
-			tx.Rollback()
-			return errors.Wrap(err, "scanning nutrientID")
-		}
-
-		_, err = tx.Exec(addFoodNutrients, details.Nutrients[i].Type,
-			details.Nutrients[i].Amount, nID, fdcID)
-		if err != nil {
-			// TODO: handle rollback error
-			tx.Rollback()
-			return errors.Wrap(err, "inserting food_nutrient")
-		}
-	}
-	// TODO: handle commit error
-	tx.Commit()
 	return nil
 }

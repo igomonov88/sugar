@@ -69,4 +69,21 @@ var migrations = []darwin.Migration{
   		FOREIGN KEY(nutrient_id) REFERENCES nutrients(id)
 );`,
 	},
+	{
+		Version:     5,
+		Description: "Add Carbohydrates table",
+		Script: `
+	CREATE TABLE IF NOT EXISTS carbohydrates (
+		id SERIAL PRIMARY KEY, 
+		fdc_id INT NOT NULL, 
+		amount FLOAT NOT NULL, 
+		unit_name VARCHAR,
+		FOREIGN KEY (fdc_id) REFERENCES food(fdc_id));`,
+	},
+	{
+		Version:     6,
+		Description: "Add index to carbohydrates table",
+		Script: `
+	CREATE INDEX idx_fdc_id on carbohydrates(fdc_id);`,
+	},
 }

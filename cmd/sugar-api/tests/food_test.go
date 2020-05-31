@@ -48,13 +48,13 @@ func TestFoodAPI(t *testing.T) {
 }
 
 func (ft *FoodAPITests) postSearch200(t *testing.T) {
-	r := httptest.NewRequest("GET", "/v1/search/product=mars",nil)
+	r := httptest.NewRequest("GET", "/v1/search/product=mars", nil)
 	w := httptest.NewRecorder()
 
 	ft.app.ServeHTTP(w, r)
 
 	// f is the value we will return.
-	var f fdcAPI.SearchResponse
+	var f fdcAPI.FoodSearchResponse
 
 	t.Log("Given the need to search for new food.")
 	{

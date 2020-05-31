@@ -2,15 +2,17 @@ package handlers
 
 import (
 	"context"
+	"database/sql"
 	"net/http"
+	"strconv"
+	"strings"
 
-	"github.com/jmoiron/sqlx"
-	"github.com/pkg/errors"
 	"go.opencensus.io/trace"
 
+	"github.com/igomonov88/sugar/internal/carbohydrates"
 	api "github.com/igomonov88/sugar/internal/fdc"
 	"github.com/igomonov88/sugar/internal/platform/web"
-	storage "github.com/igomonov88/sugar/internal/storage"
+	"github.com/igomonov88/sugar/internal/storage"
 )
 
 // Details returns info about product with given food detail
@@ -18,80 +20,50 @@ func (f *Food) Details(ctx context.Context, w http.ResponseWriter, r *http.Reque
 	ctx, span := trace.StartSpan(ctx, "handlers.Food.Details")
 	defer span.End()
 
-	var req api.DetailsRequest
-	if err := web.Decode(r, &req); err != nil {
-		return errors.Wrap(err, "")
+	value, exist := f.cache.Get(strings.TrimSpace(params["fdcID"]))
+	if exist {
+		return web.Respond(ctx, w, value, http.StatusOK)
 	}
 
-	details, err := storageGetDetails(ctx, f.db, req.FDCID)
+	fdcID, err := strconv.Atoi(strings.TrimSpace(params["fdcID"]))
 	if err != nil {
-		return errors.Wrap(err, "")
+		return web.NewRequestError(err, http.StatusBadRequest)
 	}
 
-	if details.FoodNutrients != nil || len(details.FoodNutrients) > 0 {
-		return web.Respond(ctx, w, details, http.StatusOK)
-	}
-
-	details, err = api.Details(ctx, f.apiClient, req)
+	d, err := storage.RetrieveDetails(ctx, f.db, fdcID)
 	if err != nil {
-		return errors.Wrap(err, "")
+		switch err {
+		case sql.ErrNoRows:
+			d, err := api.Details(ctx, f.apiClient, fdcID)
+			if err != nil {
+				return web.NewRequestError(err, http.StatusNotFound)
+			}
+
+			// Get information about carbohydrates from FDC API response
+			carbs := carbohydrates.Retrieve(d.FoodNutrients)
+			resp := DetailsResponse{
+				Description:   d.Description,
+				Carbohydrates: carbs,
+			}
+
+			go storage.SaveDetails(ctx, f.db, fdcID, carbs.Amount, carbs.UnitName)
+			go f.cache.Add(strconv.Itoa(fdcID), resp)
+
+			return web.Respond(ctx, w, resp, http.StatusOK)
+		default:
+			return web.NewRequestError(err, http.StatusInternalServerError)
+		}
 	}
 
-	go storageAddDetails(ctx, f.db, req.FDCID, details)
-	return web.Respond(ctx, w, details, http.StatusOK)
-}
-
-// storageAddDetails add values from external api, and put them to storage.
-func storageAddDetails(ctx context.Context, db *sqlx.DB, fdcID int, details *api.DetailsResponse) {
-	ctx, span := trace.StartSpan(ctx, "handlers.Food.Details.Storage.")
-	defer span.End()
-
-	var foodDetails storage.Details
-	foodDetails.Description = details.Description
-
-	for i := range details.FoodNutrients {
-		n := storage.Nutrient{
-			Name:     details.FoodNutrients[i].Nutrient.Name,
-			Rank:     details.FoodNutrients[i].Nutrient.Rank,
-			UnitName: details.FoodNutrients[i].Nutrient.UnitName,
-		}
-		fn := storage.FoodNutrient{
-			Type:     details.FoodNutrients[i].Type,
-			Amount:   details.FoodNutrients[i].Amount,
-			Nutrient: n,
-		}
-		foodDetails.Nutrients = append(foodDetails.Nutrients, fn)
-		storage.SaveDetails(ctx, db, fdcID, foodDetails)
+	carbs := carbohydrates.Carbohydrates{
+		Amount:   d.Amount,
+		UnitName: d.UnitName,
 	}
-}
 
-// storageGetDetails returns details information in api.DetailsResponse format
-// or returns error.
-func storageGetDetails(ctx context.Context, db *sqlx.DB, fdcID int) (*api.DetailsResponse, error) {
-	ctx, span := trace.StartSpan(ctx, "handlers.Food.Details.Storage")
-	defer span.End()
-
-	var resp api.DetailsResponse
-
-	details, err := storage.RetrieveDetails(ctx, db, fdcID)
-	if err != nil {
-		return nil, err
+	resp := DetailsResponse{
+		Description:   d.Description,
+		Carbohydrates: carbs,
 	}
-	resp.Description = details.Description
 
-	for i := range details.Nutrients {
-		n := api.Nutrient{
-			Name:     details.Nutrients[i].Name,
-			Rank:     details.Nutrients[i].Rank,
-			UnitName: details.Nutrients[i].UnitName,
-		}
-		fn := api.FoodNutrient{
-			Type:     details.Nutrients[i].Type,
-			ID:       details.Nutrients[i].ID,
-			Nutrient: n,
-			Amount:   details.Nutrients[i].Amount,
-		}
-		resp.FoodNutrients = append(resp.FoodNutrients, fn)
-	}
-	return &resp, nil
+	return web.Respond(ctx, w, resp, http.StatusOK)
 }

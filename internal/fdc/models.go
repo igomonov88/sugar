@@ -6,8 +6,8 @@ type SearchRequest struct {
 	SearchInput string `json:"search_input"`
 }
 
-// SearchResponse represents the request result of food search request
-type SearchResponse struct {
+// FoodSearchResponse represents the request result of food search request
+type FoodSearchResponse struct {
 	// Foods is the list of foods found matching the search criteria.
 	Foods []Food `json:"foods"`
 }
