@@ -34,7 +34,7 @@ var (
 )
 
 // Details knows how to get information about product from external api.
-func Details(ctx context.Context, client *Client, fdcID int) (*DetailsResponse, error) {
+func Details(ctx context.Context, client *Client, fdcID int) (*DetailsInternalResponse, error) {
 	ctx, span := trace.StartSpan(ctx, "internal.FoodDataCenter.Details")
 	defer span.End()
 
@@ -73,21 +73,7 @@ func Details(ctx context.Context, client *Client, fdcID int) (*DetailsResponse, 
 		return nil, errors.Wrap(err, "failed to decode response to food details response")
 	}
 
-	fd := DetailsResponse{
-		FoodNutrients: make([]FoodNutrient, len(fdi.FoodNutrients)),
-		FoodPortions:  make([]FoodPortion, len(fdi.FoodPortions)),
-	}
-
-	for i := range fdi.FoodNutrients {
-		fd.FoodNutrients[i] = fdi.FoodNutrients[i]
-	}
-
-	for i := range fdi.FoodPortions {
-		fd.FoodPortions[i] = fdi.FoodPortions[i]
-	}
-
-	fd.Description = fdi.Description
-	return &fd, nil
+	return &fdi, nil
 }
 
 // foodDetails make an external call to food data central with given client and

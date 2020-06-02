@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/jmoiron/sqlx"
 	"go.opencensus.io/trace"
 
 	"github.com/igomonov88/sugar/internal/carbohydrates"
@@ -44,9 +45,14 @@ func (f *Food) Details(ctx context.Context, w http.ResponseWriter, r *http.Reque
 			resp := DetailsResponse{
 				Description:   d.Description,
 				Carbohydrates: carbs,
+				Portions:      make([]Portion, len(d.FoodPortions)),
+			}
+			for i := range d.FoodPortions {
+				resp.Portions[i].GramWeight = d.FoodPortions[i].GramWeight
+				resp.Portions[i].Description = d.FoodPortions[i].PortionDescription
 			}
 
-			go storage.SaveDetails(ctx, f.db, fdcID, carbs.Amount, carbs.UnitName)
+			go saveDetails(ctx, f.db, fdcID, carbs, resp.Portions)
 			go f.cache.Add(strconv.Itoa(fdcID), resp)
 
 			return web.Respond(ctx, w, resp, http.StatusOK)
@@ -66,4 +72,24 @@ func (f *Food) Details(ctx context.Context, w http.ResponseWriter, r *http.Reque
 	}
 
 	return web.Respond(ctx, w, resp, http.StatusOK)
+}
+
+func saveDetails(ctx context.Context, db *sqlx.DB, fdcID int, carbs carbohydrates.Carbohydrates,
+	portions []Portion) error {
+	ctx, span := trace.StartSpan(ctx, "handlers.Food.Details.Storage.SaveDetails")
+	defer span.End()
+
+	dbPortions := make([]storage.Portion, len(portions))
+	dbCarbs := storage.Carbohydrates{
+		FDCID:    fdcID,
+		Amount:   carbs.Amount,
+		UnitName: carbs.UnitName,
+	}
+	for i := range portions {
+		dbPortions[i].FDCID = fdcID
+		dbPortions[i].GramWeight = portions[i].GramWeight
+		dbPortions[i].Description = portions[i].Description
+	}
+
+	return storage.SaveDetails(ctx, db, fdcID, dbCarbs, dbPortions)
 }

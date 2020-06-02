@@ -82,7 +82,14 @@ func TestFoodDataStorage(t *testing.T) {
 
 			// Add Food details to storage and check that everything is OK
 			{
-				err := storage.SaveDetails(ctx, db, food.FDCID, 100.0, "g")
+				cs := storage.Carbohydrates{
+					FDCID:    food.FDCID,
+					Amount:   66.5,
+					UnitName: "g",
+				}
+				var ps []storage.Portion
+
+				err := storage.SaveDetails(ctx, db, food.FDCID, cs, ps)
 				if err != nil {
 					t.Fatalf("\t%s\tShould be able to add food details to storage: %s", tests.Failed, err)
 				}

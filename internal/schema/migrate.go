@@ -83,7 +83,18 @@ var migrations = []darwin.Migration{
 	{
 		Version:     6,
 		Description: "Add index to carbohydrates table",
+		Script:      `CREATE INDEX idx_fdc_id on carbohydrates(fdc_id);`,
+	},
+	{
+		Version:     7,
+		Description: "Add portion table",
 		Script: `
-	CREATE INDEX idx_fdc_id on carbohydrates(fdc_id);`,
+	CREATE TABLE IF NOT EXISTS portions (
+		id SERIAL PRIMARY KEY,
+		fdc_id INT NOT NULL,
+		gram_weight FLOAT NOT NULL,
+		description VARCHAR,
+		FOREIGN KEY (fdc_id) REFERENCES food(fdc_id));
+	`,
 	},
 }

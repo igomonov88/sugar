@@ -20,13 +20,13 @@ func (f *Food) Search(ctx context.Context, w http.ResponseWriter, r *http.Reques
 
 	si := strings.TrimSpace(params["product"])
 
-	foods , err := storage.List(ctx, f.db, si)
+	foods, err := storage.List(ctx, f.db, si)
 	if err != nil {
 		return web.NewRequestError(err, http.StatusInternalServerError)
 	}
 
 	if len(foods) != 0 {
-		resp := SearchResponse{Products:make([]ProductInfo, len(foods))}
+		resp := SearchResponse{Products: make([]ProductInfo, len(foods))}
 		for i := range foods {
 			product := ProductInfo{
 				FDCID:       foods[i].FDCID,
@@ -44,8 +44,8 @@ func (f *Food) Search(ctx context.Context, w http.ResponseWriter, r *http.Reques
 		return web.NewRequestError(err, http.StatusInternalServerError)
 	}
 
-	resp := SearchResponse{Products:make([]ProductInfo, len(sr.Foods))}
-	if len (sr.Foods) != 0 {
+	resp := SearchResponse{Products: make([]ProductInfo, len(sr.Foods))}
+	if len(sr.Foods) != 0 {
 		for i := range sr.Foods {
 			product := ProductInfo{
 				FDCID:       sr.Foods[i].FDCID,

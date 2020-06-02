@@ -6,6 +6,15 @@ import "github.com/igomonov88/sugar/internal/carbohydrates"
 type DetailsResponse struct {
 	Description                 string `json:"description"`
 	carbohydrates.Carbohydrates `json:"carbohydrates"`
+	Portions                    []Portion `json:"portions"`
+}
+
+type Portion struct {
+	// GramWeight represents total gram amount in portion
+	GramWeight float64 `json:"gram_weight"`
+
+	// PortionDescription represents information about portion 1bar/1snack etc.
+	Description string `json:"description"`
 }
 
 // SearchResponse represents the request result of food search request

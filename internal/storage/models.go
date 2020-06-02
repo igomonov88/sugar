@@ -18,6 +18,7 @@ type Details struct {
 type DetailsRef struct {
 	Description string `db:"description"`
 	Carbohydrates
+	Portions []Portion
 }
 
 // Carbohydrates in specified food with provided fdcID
@@ -26,6 +27,13 @@ type Carbohydrates struct {
 	FDCID    int     `db:"fdc_id"`
 	Amount   float64 `db:"amount"`
 	UnitName string  `db:"unit_name"`
+}
+
+type Portion struct {
+	ID          int     `db:"id"`
+	FDCID       int     `db:"fdc_id"`
+	GramWeight  float64 `db:"gram_weight"`
+	Description string  `db:"description"`
 }
 
 // FoodNutrient represents nutrients with amunt and type.

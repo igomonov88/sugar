@@ -65,15 +65,34 @@ func RetrieveDetails(ctx context.Context, db *sqlx.DB, fdcID int) (*DetailsRef, 
 	defer span.End()
 
 	const (
-		query = `
+		descriptionAndCarbsInfo = `
 		SELECT f.description, c.amount, c.unit_name FROM food AS f 
 		INNER JOIN carbohydrates AS c ON f.fdc_id = c.fdc_id and c.fdc_id = $1 
 		FOR UPDATE;`
+		portionsInfo = `
+		SELECT id, fdc_id, gram_weight, description
+		FROM portions WHERE fdc_id = $1;`
 	)
 
-	var details DetailsRef
+	var portions []Portion
 
-	err := db.GetContext(ctx, &details, query, fdcID)
+	err := db.SelectContext(ctx, &portions, portionsInfo, fdcID)
+	if err != nil {
+		return nil, err
+	}
+
+	details := DetailsRef{
+		Portions: make([]Portion, len(portions)),
+	}
+
+	for i := range portions {
+		details.Portions[i].ID = portions[i].ID
+		details.Portions[i].FDCID = portions[i].FDCID
+		details.Portions[i].Description = portions[i].Description
+		details.Portions[i].GramWeight = portions[i].GramWeight
+	}
+
+	err = db.GetContext(ctx, &details, descriptionAndCarbsInfo, fdcID)
 	if err != nil {
 		return nil, err
 	}
@@ -81,35 +100,47 @@ func RetrieveDetails(ctx context.Context, db *sqlx.DB, fdcID int) (*DetailsRef, 
 	return &details, nil
 }
 
-// SaveCarbohydrates saving carbohydrates to database
-func SaveCarbohydrates(ctx context.Context, db *sqlx.DB, fdcID int, amount float64, units string) error {
-	ctx, span := trace.StartSpan(ctx, "internal.storage.SaveCarbohydrates")
-	defer span.End()
-
-	const query = `
-		INSERT INTO carbohydrates (fdc_id, amount, units) VALUES ($1, $2, $3)`
-
-	_, err := db.ExecContext(ctx, query, fdcID, amount, units)
-	if err != nil {
-		return errors.Wrap(err, "inserting carbohydrates")
-	}
-
-	return nil
-}
-
 // SaveDetails save provided details to database.
-func SaveDetails(ctx context.Context, db *sqlx.DB, fdcID int, amount float64, units string) error {
+func SaveDetails(ctx context.Context, db *sqlx.DB, fdcID int, carbs Carbohydrates, portions []Portion) error {
 	ctx, span := trace.StartSpan(ctx, "internal.storage.SaveDetails")
 	defer span.End()
 
 	const (
 		addCarbs = `INSERT INTO carbohydrates (fdc_id, amount, unit_name) 
 		VALUES ($1, $2, $3) ON CONFLICT DO NOTHING;`
+		addPortions = `INSERT INTO portions (fdc_id, gram_weight, description) 
+		VALUES ($1, $2, $3) ON CONFLICT DO NOTHING;`
 	)
 
-	if _, err := db.Exec(addCarbs, fdcID, amount, units); err != nil {
+	if len(portions) == 0 {
+		_, err := db.Exec(addCarbs, fdcID, carbs.Amount, carbs.UnitName)
+		if err != nil {
+			return errors.Wrap(err, "inserting carbohydrates")
+		}
+		return nil
+	}
+
+	tx, err := db.Begin()
+	if err != nil {
+		return errors.Wrap(err, "creating transaction")
+	}
+
+	_, err = tx.Exec(addCarbs, fdcID, carbs.Amount, carbs.UnitName)
+	if err != nil {
+		tx.Rollback()
 		return errors.Wrap(err, "inserting carbohydrates")
 	}
 
+	for i := range portions {
+		_, err = tx.Exec(addPortions, fdcID,
+			portions[i].GramWeight, portions[i].Description,
+		)
+		if err != nil {
+			tx.Rollback()
+			return errors.Wrap(err, "inserting portion")
+		}
+	}
+
+	tx.Commit()
 	return nil
 }
