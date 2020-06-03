@@ -44,7 +44,7 @@ func NewUnit(t *testing.T) (*sqlx.DB, func()) {
 		User:       "postgres",
 		Password:   "postgres",
 		Host:       c.Host,
-		Name:       "users",
+		Name:       "postgres",
 		DisableTLS: true,
 	})
 	if err != nil {
