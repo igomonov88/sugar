@@ -45,32 +45,6 @@ var migrations = []darwin.Migration{
 	},
 	{
 		Version:     3,
-		Description: "Add nutrients table",
-		Script: `
-	CREATE TABLE IF NOT EXISTS nutrients (
-  		id SERIAL PRIMARY KEY,
-  		number INT NOT NULL,
-  		name VARCHAR NOT NULL,
-  		rank INT,
-  		unit_name VARCHAR
-	);`,
-	},
-	{
-		Version:     4,
-		Description: "Add food_nutrients table",
-		Script: `
-	CREATE TABLE IF NOT EXISTS food_nutrient (
-  		id SERIAL PRIMARY KEY,
-  		type VARCHAR,
-  		amount FLOAT NOT NULL,
-  		nutrient_id INT NOT NULL,
-  		fdc_id INT NOT NULL, 
-  		FOREIGN KEY(fdc_id) REFERENCES food(fdc_id),
-  		FOREIGN KEY(nutrient_id) REFERENCES nutrients(id)
-);`,
-	},
-	{
-		Version:     5,
 		Description: "Add Carbohydrates table",
 		Script: `
 	CREATE TABLE IF NOT EXISTS carbohydrates (
@@ -81,12 +55,12 @@ var migrations = []darwin.Migration{
 		FOREIGN KEY (fdc_id) REFERENCES food(fdc_id));`,
 	},
 	{
-		Version:     6,
+		Version:     4,
 		Description: "Add index to carbohydrates table",
 		Script:      `CREATE INDEX idx_fdc_id on carbohydrates(fdc_id);`,
 	},
 	{
-		Version:     7,
+		Version:     5,
 		Description: "Add portion table",
 		Script: `
 	CREATE TABLE IF NOT EXISTS portions (

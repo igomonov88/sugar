@@ -34,7 +34,7 @@ func run() error {
 			User       string `conf:"default:postgres"`
 			Password   string `conf:"default:postgres,noprint"`
 			Host       string `conf:"default:0.0.0.0"`
-			Name       string `conf:"default:postgres"`
+			Name       string `conf:"default:sugar"`
 			DisableTLS bool   `conf:"default:true"`
 		}
 		Args conf.Args
