@@ -78,7 +78,7 @@ func foodSearchHTTPRequest(ctx context.Context, c *Client, search string) (*http
 		return nil, errors.Wrapf(err, "request value %v", request)
 	}
 
-	//// Creating new http request.
+	// Creating new http request.
 	buf := bytes.NewBuffer(b)
 	req, err := http.NewRequest(http.MethodPost, url, buf)
 	if err != nil {

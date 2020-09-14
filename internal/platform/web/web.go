@@ -72,7 +72,7 @@ func (a *App) Handle(verb, path string, handler Handler, mw ...Middleware) {
 	// First wrap handler specific middleware around this handler.
 	handler = wrapMiddleware(mw, handler)
 
-	// Add the application's general middleware to the handler chain.
+	// Add the application's general middleware to the handler chain.(
 	handler = wrapMiddleware(a.mw, handler)
 
 	// The function to execute for each request

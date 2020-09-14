@@ -38,8 +38,8 @@ func Details(ctx context.Context, client *Client, fdcID int) (*DetailsInternalRe
 	ctx, span := trace.StartSpan(ctx, "internal.FoodDataCenter.Details")
 	defer span.End()
 
-	// Create a context with a timeout of 120 seconds.
-	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	// Create a context with a timeout of 10 seconds.
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Millisecond)
 	defer cancel()
 
 	var fdi DetailsInternalResponse
